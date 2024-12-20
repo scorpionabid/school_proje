@@ -1,0 +1,227 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ report.title }} - {% translate "Hesabat Detalları" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>{% translate "Hesabat Detalları" %}</h6>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'sector:sector_reports' report.sector.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-arrow-left me-2"></i>{% translate "Geri" %}
+                            </a>
+                            {% if report.status == 'DRAFT' %}
+                                <a href="{% url 'sector:report_edit' report.pk %}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-edit me-2"></i>{% translate "Redaktə et" %}
+                                </a>
+                            {% endif %}
+                            {% if report.status == 'PENDING' %}
+                                <button type="button" class="btn btn-success btn-sm" onclick="approveReport()">
+                                    <i class="fas fa-check me-2"></i>{% translate "Təsdiqlə" %}
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="rejectReport()">
+                                    <i class="fas fa-times me-2"></i>{% translate "Rədd et" %}
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Hesabat başlığı və meta məlumatları -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <h3 class="text-lg mb-1">{{ report.title }}</h3>
+                            <div class="d-flex align-items-center text-sm text-muted">
+                                <span class="me-3">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ report.report_period|date:"d.m.Y" }}
+                                </span>
+                                <span class="me-3">
+                                    <i class="fas fa-tag me-1"></i>
+                                    {{ report.get_report_type_display }}
+                                </span>
+                                <span>
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ report.submitted_by.get_full_name }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            {% if report.status == 'DRAFT' %}
+                                <span class="badge bg-secondary">{{ report.get_status_display }}</span>
+                            {% elif report.status == 'PENDING' %}
+                                <span class="badge bg-warning">{{ report.get_status_display }}</span>
+                            {% elif report.status == 'APPROVED' %}
+                                <span class="badge bg-success">{{ report.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ report.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Hesabat məzmunu -->
+                    <div class="mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                {{ report.content|safe }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Əlavə fayllar -->
+                    {% if report.attachments %}
+                    <div class="mb-4">
+                        <h6 class="text-uppercase text-body text-xs font-weight-bolder mb-3">
+                            {% translate "Əlavə Fayllar" %}
+                        </h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-file-alt fa-2x text-primary me-3"></i>
+                                    <div>
+                                        <h6 class="mb-0">{{ report.attachments.name|split:'/'}}</h6>
+                                        <small class="text-muted">
+                                            {{ report.attachments.size|filesizeformat }}
+                                        </small>
+                                    </div>
+                                    <a href="{{ report.attachments.url }}" class="btn btn-sm btn-primary ms-auto" download>
+                                        <i class="fas fa-download me-2"></i>{% translate "Yüklə" %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Təsdiq/Rədd məlumatları -->
+                    {% if report.status == 'APPROVED' or report.status == 'REJECTED' %}
+                    <div>
+                        <h6 class="text-uppercase text-body text-xs font-weight-bolder mb-3">
+                            {% translate "Təsdiq Məlumatları" %}
+                        </h6>
+                        <div class="card">
+                            <div class="card-body">
+                                {% if report.status == 'APPROVED' %}
+                                    <div class="d-flex align-items-center text-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <div>
+                                            <p class="mb-0">
+                                                {% translate "Təsdiq edildi" %} - 
+                                                {{ report.approved_by.get_full_name }}
+                                            </p>
+                                            <small class="text-muted">
+                                                {{ report.approval_date|date:"d.m.Y H:i" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="d-flex align-items-center text-danger">
+                                        <i class="fas fa-times-circle me-2"></i>
+                                        <div>
+                                            <p class="mb-0">{% translate "Rədd edildi" %}</p>
+                                            <p class="mb-0"><strong>{% translate "Səbəb" %}:</strong> {{ report.rejection_reason }}</p>
+                                            <small class="text-muted">
+                                                {{ report.updated_at|date:"d.m.Y H:i" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rədd etmə səbəbi modal -->
+<div class="modal fade" id="rejectReasonModal" tabindex="-1" aria-labelledby="rejectReasonModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectReasonModalLabel">{% translate "Rədd Etmə Səbəbi" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="reason" class="form-label">{% translate "Səbəb" %}</label>
+                    <textarea class="form-control" id="reason" rows="3" required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Bağla" %}</button>
+                <button type="button" class="btn btn-danger" onclick="submitReject()">{% translate "Rədd et" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function approveReport() {
+    if (confirm("{% translate 'Bu hesabatı təsdiqləmək istədiyinizə əminsiniz?' %}")) {
+        fetch("{% url 'sector:report_approve' report.pk %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert(data.message || "{% translate 'Xəta baş verdi.' %}");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("{% translate 'Xəta baş verdi.' %}");
+        });
+    }
+}
+
+function rejectReport() {
+    new bootstrap.Modal(document.getElementById('rejectReasonModal')).show();
+}
+
+function submitReject() {
+    const reason = document.getElementById('reason').value;
+
+    if (!reason.trim()) {
+        alert("{% translate 'Zəhmət olmasa rədd etmə səbəbini qeyd edin.' %}");
+        return;
+    }
+
+    fetch("{% url 'sector:report_reject' report.pk %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert(data.message || "{% translate 'Xəta baş verdi.' %}");
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("{% translate 'Xəta baş verdi.' %}");
+    });
+}
+</script>
+{% endblock %}
+{% endblock %}

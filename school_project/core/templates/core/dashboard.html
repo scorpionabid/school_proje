@@ -1,0 +1,71 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard - Məktəb Nəzarət Sistemi{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>Xoş gəlmisiniz, {{ user.get_full_name }}!</h2>
+        <p class="text-muted">{{ user_type }}</p>
+    </div>
+</div>
+
+{% if message %}
+<div class="alert alert-info">
+    {{ message }}
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Profil Məlumatları</h5>
+                <ul class="list-unstyled">
+                    <li><strong>İstifadəçi adı:</strong> {{ user.username }}</li>
+                    <li><strong>Email:</strong> {{ user.email }}</li>
+                    <li><strong>UTIS kodu:</strong> {{ user.utis_code }}</li>
+                    <li><strong>WhatsApp:</strong> {{ user.whatsapp_number }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">İdarəetmə Paneli</h5>
+                <div class="list-group">
+                    {% if can_view_admin %}
+                    <a href="{% url 'admin:index' %}" class="list-group-item list-group-item-action">
+                        Admin Paneli
+                        <span class="badge bg-primary float-end">Admin</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% if can_view_region %}
+                    <a href="{% url 'region:dashboard' %}" class="list-group-item list-group-item-action">
+                        Region İdarəetməsi
+                        <span class="badge bg-success float-end">Region</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% if can_view_sector %}
+                    <a href="{% url 'sector:dashboard' %}" class="list-group-item list-group-item-action">
+                        Sektor İdarəetməsi
+                        <span class="badge bg-info float-end">Sektor</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% if can_view_school %}
+                    <a href="{% url 'school:dashboard' %}" class="list-group-item list-group-item-action">
+                        Məktəb İdarəetməsi
+                        <span class="badge bg-warning float-end">Məktəb</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

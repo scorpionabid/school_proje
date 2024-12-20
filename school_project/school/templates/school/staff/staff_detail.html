@@ -1,0 +1,162 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">{{ staff.get_full_name }}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'school:dashboard' %}">{% trans "Ana Səhifə" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:staff_list' %}">{% trans "İşçilər" %}</a></li>
+                        <li class="breadcrumb-item active">{{ staff.get_full_name }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Info boxes -->
+            <div class="row">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-info"><i class="fas fa-id-card"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">{% trans "Vəzifə" %}</span>
+                            <span class="info-box-number">{{ staff.position }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-success"><i class="fas fa-phone"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">{% trans "Telefon" %}</span>
+                            <span class="info-box-number">{{ staff.phone }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-warning"><i class="fas fa-envelope"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">{% trans "E-poçt" %}</span>
+                            <span class="info-box-number">{{ staff.email }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-danger"><i class="fas fa-user-check"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">{% trans "Status" %}</span>
+                            <span class="info-box-number">
+                                {% if staff.is_active %}
+                                    <span class="badge badge-success">{% trans "Aktiv" %}</span>
+                                {% else %}
+                                    <span class="badge badge-danger">{% trans "Deaktiv" %}</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sinif rəhbərliyi -->
+            {% if classroom %}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Sinif rəhbərliyi" %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">{% trans "Sinif" %}</dt>
+                                <dd class="col-sm-8">{{ classroom.name }}</dd>
+                                <dt class="col-sm-4">{% trans "Şagird sayı" %}</dt>
+                                <dd class="col-sm-8">{{ classroom.students.count }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Tədris etdiyi fənlər -->
+            {% if subjects %}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Tədris etdiyi fənlər" %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Fənn" %}</th>
+                                    <th>{% trans "Sinif" %}</th>
+                                    <th>{% trans "Həftəlik saat" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in subjects %}
+                                <tr>
+                                    <td>{{ subject.name }}</td>
+                                    <td>{{ subject.grade }}</td>
+                                    <td>{{ subject.weekly_hours }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Tədris etdiyi siniflər -->
+            {% if teaching_classes %}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Tədris etdiyi siniflər" %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Sinif" %}</th>
+                                    <th>{% trans "Şagird sayı" %}</th>
+                                    <th>{% trans "Fənn" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for class in teaching_classes %}
+                                <tr>
+                                    <td>{{ class.name }}</td>
+                                    <td>{{ class.students.count }}</td>
+                                    <td>
+                                        {% for subject in class.subjects.all %}
+                                            {{ subject.name }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

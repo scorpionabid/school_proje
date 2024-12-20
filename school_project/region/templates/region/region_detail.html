@@ -1,0 +1,128 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ region.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Region məlumatları -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">{{ region.name }}</h4>
+                <span class="badge {% if region.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ region.is_active|yesno:"Aktiv,Deaktiv" }}
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="card-title">Əsas Məlumatlar</h5>
+                    <table class="table">
+                        <tr>
+                            <th>UTIS Kodu:</th>
+                            <td>{{ region.utis_code }}</td>
+                        </tr>
+                        <tr>
+                            <th>Əlaqə nömrəsi:</th>
+                            <td>{{ region.phone_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ region.email|default:"--" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Vebsayt:</th>
+                            <td>
+                                {% if region.website %}
+                                    <a href="{{ region.website }}" target="_blank">{{ region.website }}</a>
+                                {% else %}
+                                    --
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="card-title">Rəhbərlik</h5>
+                    {% if region.director %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Region rəhbəri</h6>
+                            <p class="card-text">
+                                <strong>{{ region.director.get_full_name }}</strong><br>
+                                Email: {{ region.director.email }}<br>
+                                WhatsApp: {{ region.director.whatsapp_number|default:"--" }}
+                            </p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Region rəhbəri təyin edilməyib</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Son sənədlər və xəbərlər -->
+    <div class="row">
+        <!-- Son sənədlər -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Son Sənədlər</h5>
+                        <a href="{% url 'region:region_documents' region.pk %}" class="btn btn-sm btn-primary">
+                            Bütün sənədlər
+                        </a>
+                    </div>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for doc in recent_documents %}
+                    <a href="{{ doc.file.url }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ doc.title }}</h6>
+                            <small class="text-muted">{{ doc.uploaded_at|date:"d.m.Y" }}</small>
+                        </div>
+                        <p class="mb-1">{{ doc.get_document_type_display }}</p>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item">Sənəd tapılmadı</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Son xəbərlər -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Son Xəbərlər</h5>
+                        <a href="{% url 'region:region_news' region.pk %}" class="btn btn-sm btn-primary">
+                            Bütün xəbərlər
+                        </a>
+                    </div>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for news in recent_news %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ news.title }}</h6>
+                            <small class="text-muted">{{ news.published_at|date:"d.m.Y" }}</small>
+                        </div>
+                        <p class="mb-1">{{ news.content|truncatewords:30 }}</p>
+                        {% if news.image %}
+                        <img src="{{ news.image.url }}" class="img-thumbnail mt-2" style="max-height: 100px;">
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item">Xəbər tapılmadı</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

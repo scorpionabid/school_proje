@@ -1,0 +1,158 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">{{ student.get_full_name }}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'school:dashboard' %}">{% trans "Ana Səhifə" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:student_list' %}">{% trans "Şagirdlər" %}</a></li>
+                        <li class="breadcrumb-item active">{{ student.get_full_name }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Info boxes -->
+            <div class="row">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-info"><i class="fas fa-id-card"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">{% trans "UTİS ID" %}</span>
+                            <span class="info-box-number">{{ student.utis_id }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-success"><i class="fas fa-chalkboard"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">{% trans "Sinif" %}</span>
+                            <span class="info-box-number">{{ student.classroom.name }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-warning"><i class="fas fa-calendar-check"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">{% trans "Status" %}</span>
+                            <span class="info-box-number">
+                                {% if student.is_active %}
+                                    <span class="badge badge-success">{% trans "Aktiv" %}</span>
+                                {% else %}
+                                    <span class="badge badge-danger">{% trans "Deaktiv" %}</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-danger"><i class="fas fa-venus-mars"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">{% trans "Cins" %}</span>
+                            <span class="info-box-number">{{ student.get_gender_display }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Qiymət statistikası -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Qiymət statistikası" %}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Qiymət növü" %}</th>
+                                <th>{% trans "Orta qiymət" %}</th>
+                                <th>{% trans "Qiymət sayı" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in grade_stats %}
+                            <tr>
+                                <td>{{ stat.grade_type }}</td>
+                                <td>{{ stat.avg_grade|floatformat:1 }}</td>
+                                <td>{{ stat.total_grades }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Son qiymətlər -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Son qiymətlər" %}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Tarix" %}</th>
+                                <th>{% trans "Fənn" %}</th>
+                                <th>{% trans "Qiymət növü" %}</th>
+                                <th>{% trans "Qiymət" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade in recent_grades %}
+                            <tr>
+                                <td>{{ grade.date }}</td>
+                                <td>{{ grade.subject }}</td>
+                                <td>{{ grade.get_grade_type_display }}</td>
+                                <td>{{ grade.grade }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Davamiyyət statistikası -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Davamiyyət statistikası" %}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Tarix" %}</th>
+                                <th>{% trans "İştirak" %}</th>
+                                <th>{% trans "İştirak etməmə" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in attendance_stats %}
+                            <tr>
+                                <td>{{ stat.date }}</td>
+                                <td>{{ stat.present }}</td>
+                                <td>{{ stat.absent }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

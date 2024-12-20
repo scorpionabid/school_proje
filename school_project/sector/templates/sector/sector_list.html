@@ -1,0 +1,207 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Sektorlar" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Statistika kartları -->
+    <div class="row mb-4">
+        <div class="col-xl-6 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">{% translate "Ümumi Sektorlar" %}</p>
+                                <h5 class="font-weight-bolder mb-0">
+                                    {{ total_sectors }}
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
+                                <i class="fas fa-building text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">{% translate "Aktiv Sektorlar" %}</p>
+                                <h5 class="font-weight-bolder mb-0">
+                                    {{ active_sectors }}
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md">
+                                <i class="fas fa-check text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sektorlar cədvəli -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>{% translate "Sektorlar Siyahısı" %}</h6>
+                        <div class="d-flex gap-2">
+                            <!-- Region filter -->
+                            <form method="get" class="d-flex gap-2">
+                                <select name="region" class="form-select" onchange="this.form.submit()">
+                                    <option value="">{% translate "Bütün Regionlar" %}</option>
+                                    {% for region in regions %}
+                                        <option value="{{ region.id }}" {% if request.GET.region == region.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ region.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                        {% translate "Sektor" %}
+                                    </th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                        {% translate "Region" %}
+                                    </th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                        {% translate "UTIS Kodu" %}
+                                    </th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                        {% translate "Rəhbər" %}
+                                    </th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                        {% translate "Məktəb Sayı" %}
+                                    </th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                        {% translate "Status" %}
+                                    </th>
+                                    <th class="text-secondary opacity-7"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sector in sectors %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 class="mb-0 text-sm">{{ sector.name }}</h6>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ sector.region.name }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ sector.utis_code }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">
+                                            {% if sector.director %}
+                                                {{ sector.director.get_full_name }}
+                                            {% else %}
+                                                {% translate "Təyin edilməyib" %}
+                                            {% endif %}
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ sector.total_schools }}</p>
+                                    </td>
+                                    <td class="align-middle text-center text-sm">
+                                        {% if sector.is_active %}
+                                            <span class="badge badge-sm bg-gradient-success">{% translate "Aktiv" %}</span>
+                                        {% else %}
+                                            <span class="badge badge-sm bg-gradient-secondary">{% translate "Deaktiv" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="d-flex gap-2 justify-content-center">
+                                            <a href="{% url 'sector:sector_detail' sector.pk %}" 
+                                               class="btn btn-link text-dark px-3 mb-0">
+                                                <i class="fas fa-info-circle text-dark me-2"></i>{% translate "Ətraflı" %}
+                                            </a>
+                                            <a href="{% url 'sector:sector_documents' sector.pk %}" 
+                                               class="btn btn-link text-dark px-3 mb-0">
+                                                <i class="fas fa-file text-dark me-2"></i>{% translate "Sənədlər" %}
+                                            </a>
+                                            <a href="{% url 'sector:sector_news' sector.pk %}" 
+                                               class="btn btn-link text-dark px-3 mb-0">
+                                                <i class="fas fa-newspaper text-dark me-2"></i>{% translate "Xəbərlər" %}
+                                            </a>
+                                            <a href="{% url 'sector:sector_reports' sector.pk %}" 
+                                               class="btn btn-link text-dark px-3 mb-0">
+                                                <i class="fas fa-chart-bar text-dark me-2"></i>{% translate "Hesabatlar" %}
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <p class="text-sm mb-0">{% translate "Heç bir sektor tapılmadı." %}</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if sectors.has_other_pages %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if sectors.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ sectors.previous_page_number }}{% if request.GET.region %}&region={{ request.GET.region }}{% endif %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in sectors.paginator.page_range %}
+                {% if sectors.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.region %}&region={{ request.GET.region }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if sectors.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ sectors.next_page_number }}{% if request.GET.region %}&region={{ request.GET.region }}{% endif %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

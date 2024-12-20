@@ -1,0 +1,198 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">{% trans "Məktəb Ayarları" %}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'school:dashboard' %}">{% trans "Ana Səhifə" %}</a></li>
+                        <li class="breadcrumb-item active">{% trans "Ayarlar" %}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <!-- School Info Card -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">{% trans "Məktəb Məlumatları" %}</h3>
+                            <div class="card-tools">
+                                <a href="{% url 'school:profile' %}" class="btn btn-tool">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-4">{% trans "Məktəbin adı" %}</dt>
+                                <dd class="col-sm-8">{{ school.name }}</dd>
+
+                                <dt class="col-sm-4">{% trans "UTIS kodu" %}</dt>
+                                <dd class="col-sm-8">{{ school.utis_code }}</dd>
+
+                                <dt class="col-sm-4">{% trans "Məktəb növü" %}</dt>
+                                <dd class="col-sm-8">{{ school.get_school_type_display }}</dd>
+
+                                <dt class="col-sm-4">{% trans "Tədris dili" %}</dt>
+                                <dd class="col-sm-8">{{ school.get_language_display }}</dd>
+
+                                <dt class="col-sm-4">{% trans "Ünvan" %}</dt>
+                                <dd class="col-sm-8">{{ school.address }}</dd>
+
+                                <dt class="col-sm-4">{% trans "Telefon" %}</dt>
+                                <dd class="col-sm-8">{{ school.phone }}</dd>
+
+                                <dt class="col-sm-4">{% trans "E-poçt" %}</dt>
+                                <dd class="col-sm-8">{{ school.email|default:"-" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats Card -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">{% trans "Statistika" %}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="info-box bg-info">
+                                        <span class="info-box-icon"><i class="fas fa-users"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">{% trans "Şagirdlər" %}</span>
+                                            <span class="info-box-number">{{ students.count }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="info-box bg-success">
+                                        <span class="info-box-icon"><i class="fas fa-door-open"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">{% trans "Siniflər" %}</span>
+                                            <span class="info-box-number">{{ classes.count }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Management Cards -->
+            <div class="row">
+                <!-- Class Management -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">{% trans "Sinif İdarəetməsi" %}</h3>
+                            <div class="card-tools">
+                                <a href="{% url 'school:classroom_list' %}" class="btn btn-tool">
+                                    <i class="fas fa-list"></i>
+                                </a>
+                                <a href="{% url 'school:classroom_add' %}" class="btn btn-tool">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Sinif" %}</th>
+                                        <th>{% trans "Bölmə" %}</th>
+                                        <th>{% trans "Şagird sayı" %}</th>
+                                        <th>{% trans "Əməliyyatlar" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for class in classes|slice:":5" %}
+                                    <tr>
+                                        <td>{{ class.grade }}</td>
+                                        <td>{{ class.division }}</td>
+                                        <td>{{ class.current_students }}/{{ class.capacity }}</td>
+                                        <td>
+                                            <a href="{% url 'school:classroom_edit' class.pk %}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{% url 'school:classroom_list' %}" class="btn btn-primary btn-sm">
+                                {% trans "Bütün siniflər" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Management -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">{% trans "Şagird İdarəetməsi" %}</h3>
+                            <div class="card-tools">
+                                <a href="{% url 'school:student_list' %}" class="btn btn-tool">
+                                    <i class="fas fa-list"></i>
+                                </a>
+                                <a href="{% url 'school:student_add' %}" class="btn btn-tool">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Ad Soyad" %}</th>
+                                        <th>{% trans "Sinif" %}</th>
+                                        <th>{% trans "UTIS ID" %}</th>
+                                        <th>{% trans "Əməliyyatlar" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students|slice:":5" %}
+                                    <tr>
+                                        <td>{{ student.get_full_name }}</td>
+                                        <td>{{ student.class_room }}</td>
+                                        <td>{{ student.utis_id }}</td>
+                                        <td>
+                                            <a href="{% url 'school:student_edit' student.pk %}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{% url 'school:student_list' %}" class="btn btn-primary btn-sm">
+                                {% trans "Bütün şagirdlər" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

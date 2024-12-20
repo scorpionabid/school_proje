@@ -1,0 +1,106 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ region.name }} - Statistika{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Başlıq -->
+    <h3 class="mb-4">{{ region.name }} - Statistika</h3>
+
+    <!-- Əsas statistika -->
+    <div class="row mb-4">
+        <!-- Məktəb sayı -->
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Məktəb sayı</h6>
+                            <h2 class="mt-3 mb-0">{{ total_schools }}</h2>
+                        </div>
+                        <i class="fas fa-school fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Şagird sayı -->
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Şagird sayı</h6>
+                            <h2 class="mt-3 mb-0">{{ total_students }}</h2>
+                        </div>
+                        <i class="fas fa-user-graduate fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Müəllim sayı -->
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Müəllim sayı</h6>
+                            <h2 class="mt-3 mb-0">{{ total_teachers }}</h2>
+                        </div>
+                        <i class="fas fa-chalkboard-teacher fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Əlavə məlumatlar -->
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Məktəb/Şagird nisbəti -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Məktəb/Şagird nisbəti</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="text-center mb-0">
+                        {% if total_schools > 0 %}
+                            {{ total_students|divisibleby:total_schools }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h3>
+                    <p class="text-center text-muted">şagird/məktəb</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <!-- Müəllim/Şagird nisbəti -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Müəllim/Şagird nisbəti</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="text-center mb-0">
+                        {% if total_teachers > 0 %}
+                            {{ total_students|divisibleby:total_teachers }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h3>
+                    <p class="text-center text-muted">şagird/müəllim</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Qeyd -->
+    <div class="alert alert-info mt-4">
+        <i class="fas fa-info-circle me-2"></i>
+        Bu statistika {{ region.updated_at|date:"d.m.Y H:i" }} tarixində yenilənib.
+    </div>
+</div>
+{% endblock %}

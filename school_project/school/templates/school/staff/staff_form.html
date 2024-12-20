@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}
+    {% if form.instance.pk %}
+        {% trans "İşçi məlumatlarını yenilə" %}
+    {% else %}
+        {% trans "Yeni işçi" %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3>
+                        {% if form.instance.pk %}
+                            {% trans "İşçi məlumatlarını yenilə" %}
+                        {% else %}
+                            {% trans "Yeni işçi" %}
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_first_name">{% trans "Ad" %}</label>
+                                    <input type="text" name="first_name" id="id_first_name" class="form-control" value="{{ form.first_name.value|default:'' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_last_name">{% trans "Soyad" %}</label>
+                                    <input type="text" name="last_name" id="id_last_name" class="form-control" value="{{ form.last_name.value|default:'' }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_father_name">{% trans "Ata adı" %}</label>
+                                    <input type="text" name="father_name" id="id_father_name" class="form-control" value="{{ form.father_name.value|default:'' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_staff_type">{% trans "Vəzifə" %}</label>
+                                    <select name="staff_type" id="id_staff_type" class="form-select" required>
+                                        <option value="">---------</option>
+                                        <option value="TEACHER" {% if form.staff_type.value == 'TEACHER' %}selected{% endif %}>{% trans "Müəllim" %}</option>
+                                        <option value="ADMIN" {% if form.staff_type.value == 'ADMIN' %}selected{% endif %}>{% trans "İnzibatçı" %}</option>
+                                        <option value="OTHER" {% if form.staff_type.value == 'OTHER' %}selected{% endif %}>{% trans "Digər" %}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_phone">{% trans "Telefon" %}</label>
+                                    <input type="tel" name="phone" id="id_phone" class="form-control" value="{{ form.phone.value|default:'' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_email">{% trans "Email" %}</label>
+                                    <input type="email" name="email" id="id_email" class="form-control" value="{{ form.email.value|default:'' }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="is_active" id="id_is_active" class="form-check-input" {% if form.is_active.value %}checked{% endif %}>
+                            <label class="form-check-label" for="id_is_active">{% trans "Aktiv" %}</label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">{% trans "Yadda saxla" %}</button>
+                            <a href="{% url 'school:staff_list' %}" class="btn btn-secondary">{% trans "Geri qayıt" %}</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

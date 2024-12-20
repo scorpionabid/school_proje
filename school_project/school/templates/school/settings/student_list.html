@@ -1,0 +1,168 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">{% trans "Şagirdlər" %}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'school:dashboard' %}">{% trans "Ana Səhifə" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:settings' %}">{% trans "Ayarlar" %}</a></li>
+                        <li class="breadcrumb-item active">{% trans "Şagirdlər" %}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">{% trans "Şagird Siyahısı" %}</h3>
+                            <div class="card-tools">
+                                <a href="{% url 'school:student_add' %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus"></i> {% trans "Yeni Şagird" %}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Filter Form -->
+                            <form method="get" class="mb-4">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="class_filter">{% trans "Sinif" %}</label>
+                                            <select name="class" id="class_filter" class="form-control">
+                                                <option value="">{% trans "Bütün siniflər" %}</option>
+                                                {% for classroom in classrooms %}
+                                                <option value="{{ classroom.id }}" {% if request.GET.class == classroom.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ classroom.grade }}-{{ classroom.division }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="status_filter">{% trans "Status" %}</label>
+                                            <select name="status" id="status_filter" class="form-control">
+                                                <option value="">{% trans "Bütün" %}</option>
+                                                <option value="1" {% if request.GET.status == "1" %}selected{% endif %}>{% trans "Aktiv" %}</option>
+                                                <option value="0" {% if request.GET.status == "0" %}selected{% endif %}>{% trans "Deaktiv" %}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="search">{% trans "Axtar" %}</label>
+                                            <input type="text" name="search" id="search" class="form-control" 
+                                                   value="{{ request.GET.search }}" placeholder="{% trans 'Ad, soyad və ya UTIS ID' %}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>&nbsp;</label>
+                                            <button type="submit" class="btn btn-primary btn-block">
+                                                <i class="fas fa-search"></i> {% trans "Axtar" %}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Ad Soyad" %}</th>
+                                        <th>{% trans "Ata adı" %}</th>
+                                        <th>{% trans "Sinif" %}</th>
+                                        <th>{% trans "UTIS ID" %}</th>
+                                        <th>{% trans "Telefon" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Əməliyyatlar" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    <tr>
+                                        <td>{{ student.last_name }} {{ student.first_name }}</td>
+                                        <td>{{ student.father_name }}</td>
+                                        <td>{{ student.class_room|default:"-" }}</td>
+                                        <td>{{ student.utis_id }}</td>
+                                        <td>{{ student.phone|default:"-" }}</td>
+                                        <td>
+                                            {% if student.is_active %}
+                                            <span class="badge badge-success">{% trans "Aktiv" %}</span>
+                                            {% else %}
+                                            <span class="badge badge-danger">{% trans "Deaktiv" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'school:student_edit' student.pk %}" class="btn btn-info btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'school:student_delete' student.pk %}" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">{% trans "Heç bir şagird tapılmadı" %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if is_paginated %}
+                        <div class="card-footer clearfix">
+                            <ul class="pagination pagination-sm m-0 float-right">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.class %}&class={{ request.GET.class }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">&laquo;</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.class %}&class={{ request.GET.class }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">&lsaquo;</a>
+                                </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <a class="page-link" href="#">{{ num }}</a>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.class %}&class={{ request.GET.class }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.class %}&class={{ request.GET.class }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">&rsaquo;</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.class %}&class={{ request.GET.class }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">&raquo;</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

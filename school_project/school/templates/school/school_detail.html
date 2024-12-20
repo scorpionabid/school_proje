@@ -1,0 +1,248 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Məktəb məlumatları" %}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>{% trans "Ad" %}:</th>
+                            <td>{{ school.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>{% trans "UTIS kodu" %}:</th>
+                            <td>{{ school.utis_code }}</td>
+                        </tr>
+                        <tr>
+                            <th>{% trans "Növ" %}:</th>
+                            <td>{{ school.get_school_type_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>{% trans "Sektor" %}:</th>
+                            <td>{{ school.sector.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>{% trans "Direktor" %}:</th>
+                            <td>{{ school.principal.get_full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>{% trans "Tədris dili" %}:</th>
+                            <td>{{ school.get_language_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>{% trans "Təsis ili" %}:</th>
+                            <td>{{ school.foundation_year }}</td>
+                        </tr>
+                        <tr>
+                            <th>{% trans "Növbə sayı" %}:</th>
+                            <td>{{ school.shift_count }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Əlaqə məlumatları" %}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>{% trans "Ünvan" %}:</th>
+                            <td>{{ school.address }}</td>
+                        </tr>
+                        <tr>
+                            <th>{% trans "Telefon" %}:</th>
+                            <td>{{ school.phone }}</td>
+                        </tr>
+                        <tr>
+                            <th>{% trans "E-poçt" %}:</th>
+                            <td>{{ school.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>{% trans "Veb sayt" %}:</th>
+                            <td>
+                                {% if school.website %}
+                                <a href="{{ school.website }}" target="_blank">{{ school.website }}</a>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Statistika" %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-info">
+                                    <i class="fas fa-user-graduate"></i>
+                                </span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">{% trans "Şagird sayı" %}</span>
+                                    <span class="info-box-number">{{ total_students }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-success">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">{% trans "Müəllim sayı" %}</span>
+                                    <span class="info-box-number">{{ total_teachers }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-warning">
+                                    <i class="fas fa-chalkboard"></i>
+                                </span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">{% trans "Sinif sayı" %}</span>
+                                    <span class="info-box-number">{{ total_classes }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">{% trans "Sinif statistikası" %}</h3>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="classChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">{% trans "Davamiyyət statistikası" %}</h3>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="attendanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Məktəb məlumatlarını redaktə et" %}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                            <div class="invalid-feedback">
+                                {{ field.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <button type="submit" class="btn btn-primary">
+                            {% trans "Yadda saxla" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    // Class Statistics Chart
+    var classCtx = document.getElementById('classChart').getContext('2d');
+    var classChart = new Chart(classCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for stat in class_stats %}'{{ stat.grade }}',{% endfor %}],
+            datasets: [{
+                label: '{% trans "Şagird sayı" %}',
+                data: [{% for stat in class_stats %}{{ stat.total }},{% endfor %}],
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Attendance Statistics Chart
+    var attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+    var attendanceChart = new Chart(attendanceCtx, {
+        type: 'pie',
+        data: {
+            labels: ['{% trans "İştirak" %}', '{% trans "Qayıb" %}'],
+            datasets: [{
+                data: [
+                    {% for stat in attendance_stats %}
+                    {% if stat.is_present %}{{ stat.total }}{% endif %},
+                    {% if not stat.is_present %}{{ stat.total }}{% endif %}
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(255, 99, 132, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }]
+        }
+    });
+    
+    // Form styling
+    $('select').select2({
+        theme: 'bootstrap-5'
+    });
+});
+</script>
+{% endblock %}

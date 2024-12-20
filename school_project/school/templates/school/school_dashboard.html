@@ -1,0 +1,265 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Statistika kartları -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-info">
+                    <i class="fas fa-user-graduate"></i>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">{% trans "Şagird sayı" %}</span>
+                    <span class="info-box-number">{{ school.total_students }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-success">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">{% trans "Müəllim sayı" %}</span>
+                    <span class="info-box-number">{{ school.total_teachers }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-warning">
+                    <i class="fas fa-chalkboard"></i>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">{% trans "Sinif sayı" %}</span>
+                    <span class="info-box-number">{{ school.total_classes }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-danger">
+                    <i class="fas fa-clock"></i>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">{% trans "Növbə sayı" %}</span>
+                    <span class="info-box-number">{{ school.shift_count }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Qrafiklər -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Sinif statistikası" %}</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="classChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Davamiyyət statistikası" %}</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Son əlavə edilənlər -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Son əlavə edilən şagirdlər" %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Ad Soyad" %}</th>
+                                    <th>{% trans "Sinif" %}</th>
+                                    <th>{% trans "Qəbul tarixi" %}</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in recent_students %}
+                                <tr>
+                                    <td>{{ student.get_full_name }}</td>
+                                    <td>{{ student.class_room }}</td>
+                                    <td>{{ student.admission_date }}</td>
+                                    <td>
+                                        <a href="{% url 'school:student_detail' pk=student.pk %}"
+                                           class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Son davamiyyət" %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Tarix" %}</th>
+                                    <th>{% trans "Şagird" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                    <th>{% trans "Qeyd" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attendance in recent_attendance %}
+                                <tr>
+                                    <td>{{ attendance.date }}</td>
+                                    <td>{{ attendance.student.get_full_name }}</td>
+                                    <td>
+                                        {% if attendance.is_present %}
+                                        <span class="badge bg-success">{% trans "İştirak" %}</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">
+                                            {{ attendance.get_absence_type_display }}
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ attendance.note|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Son qiymətlər -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Son qiymətlər" %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Tarix" %}</th>
+                                    <th>{% trans "Şagird" %}</th>
+                                    <th>{% trans "Fənn" %}</th>
+                                    <th>{% trans "Qiymət növü" %}</th>
+                                    <th>{% trans "Qiymət" %}</th>
+                                    <th>{% trans "Müəllim" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for grade in recent_grades %}
+                                <tr>
+                                    <td>{{ grade.date }}</td>
+                                    <td>{{ grade.student.get_full_name }}</td>
+                                    <td>{{ grade.subject }}</td>
+                                    <td>{{ grade.get_grade_type_display }}</td>
+                                    <td>{{ grade.grade }}</td>
+                                    <td>{{ grade.teacher.get_full_name }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    // Class Statistics Chart
+    var classCtx = document.getElementById('classChart').getContext('2d');
+    var classChart = new Chart(classCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for stat in class_stats %}'{{ stat.grade }}',{% endfor %}],
+            datasets: [{
+                label: '{% trans "Şagird sayı" %}',
+                data: [{% for stat in class_stats %}{{ stat.total_students }},{% endfor %}],
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Attendance Statistics Chart
+    var attendanceData = {
+        labels: [{% for stat in attendance_stats %}'{{ stat.date|date:"d.m.Y" }}',{% endfor %}],
+        datasets: [{
+            label: '{% trans "İştirak" %}',
+            data: [{% for stat in attendance_stats %}{{ stat.present }},{% endfor %}],
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            fill: true
+        }, {
+            label: '{% trans "Qayıb" %}',
+            data: [{% for stat in attendance_stats %}{{ stat.absent }},{% endfor %}],
+            borderColor: 'rgba(255, 99, 132, 1)',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            fill: true
+        }]
+    };
+    
+    var attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+    var attendanceChart = new Chart(attendanceCtx, {
+        type: 'line',
+        data: attendanceData,
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    stacked: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

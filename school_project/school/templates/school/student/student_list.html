@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Şagirdlər" %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{% trans "Şagirdlər" %}</h2>
+        </div>
+        <div class="col text-end">
+            <div class="btn-group" role="group">
+                <a href="{% url 'school:student_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> {% trans "Yeni şagird" %}
+                </a>
+                <a href="{% url 'school:import_students' %}" class="btn btn-success">
+                    <i class="fas fa-file-import"></i> {% trans "Excel-dən yüklə" %}
+                </a>
+                <a href="{% url 'school:export_students' %}" class="btn btn-info">
+                    <i class="fas fa-file-export"></i> {% trans "Excel-ə çıxar" %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="{% trans 'Ad, soyad və ya sinif ilə axtar...' %}" value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="class_room" class="form-select">
+                        <option value="">{% trans "Bütün siniflər" %}</option>
+                        {% for class_room in classes %}
+                            <option value="{{ class_room.id }}" {% if request.GET.class_room == class_room.id|stringformat:"s" %}selected{% endif %}>
+                                {{ class_room.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="is_active" class="form-select">
+                        <option value="">{% trans "Bütün statuslar" %}</option>
+                        <option value="true" {% if request.GET.is_active == 'true' %}selected{% endif %}>{% trans "Aktiv" %}</option>
+                        <option value="false" {% if request.GET.is_active == 'false' %}selected{% endif %}>{% trans "Deaktiv" %}</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">{% trans "Axtar" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Student List -->
+    <div class="card">
+        <div class="card-body">
+            {% if students %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Ad Soyad" %}</th>
+                            <th>{% trans "Sinif" %}</th>
+                            <th>{% trans "Doğum tarixi" %}</th>
+                            <th>{% trans "Telefon" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Əməliyyatlar" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>{{ student.get_full_name }}</td>
+                            <td>{{ student.class_room.name|default:'-' }}</td>
+                            <td>{{ student.birth_date|date:"d.m.Y" }}</td>
+                            <td>{{ student.phone }}</td>
+                            <td>
+                                {% if student.is_active %}
+                                <span class="badge bg-success">{% trans "Aktiv" %}</span>
+                                {% else %}
+                                <span class="badge bg-danger">{% trans "Deaktiv" %}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'school:student_update' student.pk %}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'school:student_delete' student.pk %}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                {% trans "Heç bir şagird tapılmadı." %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

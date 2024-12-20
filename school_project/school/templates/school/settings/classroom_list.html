@@ -1,0 +1,150 @@
+{% extends 'school/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block extra_css %}
+<!-- DataTables -->
+<link rel="stylesheet" href="{% static 'vendor/datatables/css/dataTables.bootstrap5.min.css' %}">
+<!-- Select2 -->
+<link rel="stylesheet" href="{% static 'vendor/select2/css/select2.min.css' %}">
+<!-- DatePicker -->
+<link rel="stylesheet" href="{% static 'vendor/datepicker/css/bootstrap-datepicker.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <section class="content">
+        <div class="container-fluid">
+            {% block school_content %}
+            <div class="container-fluid">
+                <!-- Page Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3">{% trans "Siniflər" %}</h1>
+                    <a href="{% url 'school:classroom_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> {% trans "Yeni Sinif" %}
+                    </a>
+                </div>
+
+                <!-- Filter Form -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">{% trans "Filtrlər" %}</h6>
+                    </div>
+                    <div class="card-body">
+                        <form method="get" class="form-inline">
+                            <div class="form-group mx-sm-3 mb-2">
+                                <label for="grade" class="sr-only">{% trans "Sinif" %}</label>
+                                <select name="grade" id="grade" class="form-control select2">
+                                    <option value="">{% trans "Bütün siniflər" %}</option>
+                                    {% for grade, label in grades %}
+                                        <option value="{{ grade }}" {% if current_grade == grade %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group mx-sm-3 mb-2">
+                                <label for="is_active" class="sr-only">{% trans "Status" %}</label>
+                                <select name="is_active" id="is_active" class="form-control">
+                                    <option value="">{% trans "Bütün" %}</option>
+                                    <option value="true" {% if current_is_active == 'true' %}selected{% endif %}>
+                                        {% trans "Aktiv" %}
+                                    </option>
+                                    <option value="false" {% if current_is_active == 'false' %}selected{% endif %}>
+                                        {% trans "Deaktiv" %}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="form-group mx-sm-3 mb-2">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control" 
+                                           placeholder="{% trans 'Axtar...' %}" value="{{ search_query }}">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Classrooms Table -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">{% trans "Sinif Siyahısı" %}</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Sinif" %}</th>
+                                        <th>{% trans "Sinif Rəhbəri" %}</th>
+                                        <th>{% trans "Şagird Sayı" %}</th>
+                                        <th>{% trans "Tutum" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Əməliyyatlar" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for classroom in classroom_list %}
+                                    <tr>
+                                        <td>{{ classroom.get_full_name }}</td>
+                                        <td>{{ classroom.class_teacher.get_full_name|default:"-" }}</td>
+                                        <td>{{ classroom.current_students }}</td>
+                                        <td>{{ classroom.capacity }}</td>
+                                        <td>
+                                            {% if classroom.is_active %}
+                                                <span class="badge badge-success">{% trans "Aktiv" %}</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">{% trans "Deaktiv" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'school:classroom_update' classroom.id %}" 
+                                               class="btn btn-sm btn-info">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'school:classroom_delete' classroom.id %}" 
+                                               class="btn btn-sm btn-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">{% trans "Heç bir sinif tapılmadı" %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endblock %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    $('.select2').select2({
+        theme: 'bootstrap4',
+    });
+    
+    $('#dataTable').DataTable({
+        "language": {
+            "url": "{% static 'vendor/datatables/az.json' %}"
+        },
+        "order": [[0, "asc"]],
+        "pageLength": 25
+    });
+});
+</script>
+{% endblock %}

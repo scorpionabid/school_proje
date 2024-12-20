@@ -1,0 +1,165 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">{% trans "Toplu Davamiyyət" %}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'school:dashboard' %}">{% trans "Ana Səhifə" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:attendance_list' %}">{% trans "Davamiyyət" %}</a></li>
+                        <li class="breadcrumb-item active">{% trans "Toplu" %}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Class Selection -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Sinif seçin" %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <select id="classSelect" class="form-control select2">
+                            <option value="">{% trans "Sinif seçin" %}</option>
+                            {% for class in request.user.school_admin.school.classes.all %}
+                                <option value="{{ class.id }}" {% if classroom and classroom.id == class.id %}selected{% endif %}>
+                                    {{ class.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {% if classroom %}
+            <!-- Attendance Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ classroom.name }} - {% trans "Davamiyyət" %}</h3>
+                </div>
+                <div class="card-body">
+                    <form id="bulkAttendanceForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="classroom" value="{{ classroom.id }}">
+                        
+                        <div class="form-group">
+                            <label for="attendanceDate">{% trans "Tarix" %}</label>
+                            <input type="date" class="form-control" id="attendanceDate" name="date" required
+                                value="{{ today|date:'Y-m-d' }}">
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Şagird" %}</th>
+                                        <th class="text-center">{% trans "İştirak" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    <tr>
+                                        <td>{{ student.get_full_name }}</td>
+                                        <td class="text-center">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input attendance-checkbox" 
+                                                    id="attendance_{{ student.id }}" 
+                                                    name="attendance_{{ student.id }}" 
+                                                    checked>
+                                                <label class="custom-control-label" for="attendance_{{ student.id }}"></label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> {% trans "Yadda saxla" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    // Initialize select2
+    $('.select2').select2({
+        theme: 'bootstrap4'
+    });
+
+    // Class selection change handler
+    $('#classSelect').change(function() {
+        var classId = $(this).val();
+        if (classId) {
+            window.location.href = '{% url "school:attendance_bulk_create" %}?classroom=' + classId;
+        }
+    });
+
+    // Form submission handler
+    $('#bulkAttendanceForm').submit(function(e) {
+        e.preventDefault();
+        
+        var data = {
+            date: $('#attendanceDate').val(),
+            classroom: $('input[name="classroom"]').val(),
+            students: []
+        };
+
+        // Collect attendance data
+        $('.attendance-checkbox').each(function() {
+            var studentId = $(this).attr('id').replace('attendance_', '');
+            data.students.push({
+                id: studentId,
+                is_present: $(this).is(':checked')
+            });
+        });
+
+        // Send AJAX request
+        $.ajax({
+            url: '{% url "school:attendance_bulk_create" %}',
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    toastr.success('{% trans "Davamiyyət qeydləri əlavə edildi." %}');
+                    // Redirect to class detail page
+                    window.location.href = '{% url "school:attendance_class_detail" %}?classroom=' + data.classroom;
+                } else {
+                    toastr.error(response.message || '{% trans "Xəta baş verdi." %}');
+                }
+            },
+            error: function() {
+                toastr.error('{% trans "Xəta baş verdi." %}');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

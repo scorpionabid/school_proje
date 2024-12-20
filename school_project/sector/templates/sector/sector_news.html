@@ -1,0 +1,261 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ sector.name }} - {% translate "Sektor Xəbərləri" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Başlıq -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>{% translate "Sektor Xəbərləri" %}</h6>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'sector:sector_detail' sector.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-arrow-left me-2"></i>{% translate "Geri" %}
+                            </a>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createNewsModal">
+                                <i class="fas fa-plus me-2"></i>{% translate "Yeni Xəbər" %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Xəbərlər -->
+    <div class="row">
+        {% for news_item in news %}
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                {% if news_item.image %}
+                <div class="position-relative">
+                    <img src="{{ news_item.image.url }}" class="card-img-top" alt="{{ news_item.title }}">
+                    {% if not news_item.is_active %}
+                    <div class="position-absolute top-0 end-0 m-2">
+                        <span class="badge bg-warning">{% translate "Deaktiv" %}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">{{ news_item.published_at|date:"d.m.Y H:i" }}</small>
+                        <small class="text-muted">{{ news_item.published_by.get_full_name }}</small>
+                    </div>
+                    <h5 class="card-title">{{ news_item.title }}</h5>
+                    <p class="card-text">{{ news_item.content|truncatewords:30 }}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <button type="button" class="btn btn-link text-primary px-3 mb-0" 
+                                onclick="viewNewsDetails('{{ news_item.pk }}')">
+                            <i class="fas fa-eye text-primary me-2"></i>{% translate "Ətraflı" %}
+                        </button>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-link text-dark px-3 mb-0" 
+                                    onclick="editNews('{{ news_item.pk }}')">
+                                <i class="fas fa-edit text-dark me-2"></i>{% translate "Redaktə et" %}
+                            </button>
+                            {% if news_item.is_active %}
+                            <button type="button" class="btn btn-link text-warning px-3 mb-0" 
+                                    onclick="toggleNewsStatus('{{ news_item.pk }}', false)">
+                                <i class="fas fa-ban text-warning me-2"></i>{% translate "Deaktiv et" %}
+                            </button>
+                            {% else %}
+                            <button type="button" class="btn btn-link text-success px-3 mb-0" 
+                                    onclick="toggleNewsStatus('{{ news_item.pk }}', true)">
+                                <i class="fas fa-check text-success me-2"></i>{% translate "Aktiv et" %}
+                            </button>
+                            {% endif %}
+                            <button type="button" class="btn btn-link text-danger px-3 mb-0" 
+                                    onclick="confirmDelete('{{ news_item.pk }}')">
+                                <i class="fas fa-trash text-danger me-2"></i>{% translate "Sil" %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <p class="text-muted mb-0">{% translate "Heç bir xəbər tapılmadı." %}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if news.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if news.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ news.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in news.paginator.page_range %}
+                {% if news.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if news.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ news.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Yeni xəbər modal -->
+<div class="modal fade" id="createNewsModal" tabindex="-1" aria-labelledby="createNewsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createNewsModalLabel">{% translate "Yeni Xəbər" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">{% translate "Başlıq" %}</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">{% translate "Məzmun" %}</label>
+                        <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">{% translate "Şəkil" %}</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                        <label class="form-check-label" for="is_active">
+                            {% translate "Aktiv" %}
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Bağla" %}</button>
+                    <button type="submit" class="btn btn-primary">{% translate "Yarat" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Xəbər detalları modal -->
+<div class="modal fade" id="newsDetailsModal" tabindex="-1" aria-labelledby="newsDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newsDetailsModalLabel">{% translate "Xəbər Detalları" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="newsDetailsContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function viewNewsDetails(newsId) {
+    // AJAX ilə xəbər detallarını al
+    fetch(`/sector/news/${newsId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const content = `
+                    ${data.image ? `<img src="${data.image}" class="img-fluid mb-3" alt="${data.title}">` : ''}
+                    <h4>${data.title}</h4>
+                    <div class="d-flex justify-content-between text-muted small mb-3">
+                        <span>${data.published_at}</span>
+                        <span>${data.published_by}</span>
+                    </div>
+                    <div>${data.content}</div>
+                `;
+                document.getElementById('newsDetailsContent').innerHTML = content;
+                new bootstrap.Modal(document.getElementById('newsDetailsModal')).show();
+            } else {
+                alert(data.message || "{% translate 'Xəta baş verdi.' %}");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("{% translate 'Xəta baş verdi.' %}");
+        });
+}
+
+function editNews(newsId) {
+    // Redaktə səhifəsinə yönləndir
+    window.location.href = `/sector/news/${newsId}/edit/`;
+}
+
+function toggleNewsStatus(newsId, activate) {
+    const action = activate ? 'activate' : 'deactivate';
+    fetch(`/sector/news/${newsId}/${action}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert(data.message || "{% translate 'Xəta baş verdi.' %}");
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("{% translate 'Xəta baş verdi.' %}");
+    });
+}
+
+function confirmDelete(newsId) {
+    if (confirm("{% translate 'Bu xəbəri silmək istədiyinizə əminsiniz?' %}")) {
+        fetch(`/sector/news/${newsId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert(data.message || "{% translate 'Xəta baş verdi.' %}");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("{% translate 'Xəta baş verdi.' %}");
+        });
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

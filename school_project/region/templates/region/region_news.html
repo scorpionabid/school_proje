@@ -1,0 +1,74 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ region.name }} - Xəbərlər{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Başlıq -->
+    <h3 class="mb-4">{{ region.name }} - Xəbərlər</h3>
+
+    <!-- Xəbər siyahısı -->
+    <div class="row">
+        {% for news_item in news %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                {% if news_item.image %}
+                <img src="{{ news_item.image.url }}" class="card-img-top" alt="{{ news_item.title }}"
+                     style="height: 200px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0">{{ news_item.title }}</h5>
+                        <span class="badge bg-primary">{{ news_item.published_at|date:"d.m.Y" }}</span>
+                    </div>
+                    <p class="card-text">{{ news_item.content|linebreaks|truncatewords:50 }}</p>
+                </div>
+                <div class="card-footer text-muted">
+                    <small>
+                        Dərc edən: {{ news_item.published_by.get_full_name }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Xəbər tapılmadı
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if news.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if news.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ news.previous_page_number }}">Əvvəlki</a>
+            </li>
+            {% endif %}
+
+            {% for i in news.paginator.page_range %}
+                {% if news.number == i %}
+                <li class="page-item active">
+                    <span class="page-link">{{ i }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if news.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ news.next_page_number }}">Növbəti</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

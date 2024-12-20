@@ -1,0 +1,83 @@
+{% extends 'school/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Ayarlar" %}{% endblock %}
+
+{% block school_content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{% trans "Məktəb Ayarları" %}</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Məktəb məlumatları -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>{% trans "Məktəb məlumatları" %}</h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">{% trans "Ad" %}</dt>
+                        <dd class="col-sm-8">{{ request.user.school.name }}</dd>
+
+                        <dt class="col-sm-4">{% trans "Ünvan" %}</dt>
+                        <dd class="col-sm-8">{{ request.user.school.address }}</dd>
+
+                        <dt class="col-sm-4">{% trans "Telefon" %}</dt>
+                        <dd class="col-sm-8">{{ request.user.school.phone }}</dd>
+
+                        <dt class="col-sm-4">{% trans "Email" %}</dt>
+                        <dd class="col-sm-8">{{ request.user.school.email }}</dd>
+                    </dl>
+                    <a href="{% url 'school:school_update' %}" class="btn btn-primary">
+                        {% trans "Məlumatları yenilə" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistika -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>{% trans "Statistika" %}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">{% trans "Şagirdlər" %}</h5>
+                                    <p class="card-text display-4">{{ request.user.school.student_set.count }}</p>
+                                    <a href="{% url 'school:student_list' %}" class="btn btn-light">{% trans "İdarə et" %}</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">{% trans "İşçilər" %}</h5>
+                                    <p class="card-text display-4">{{ request.user.school.staff_set.count }}</p>
+                                    <a href="{% url 'school:staff_list' %}" class="btn btn-light">{% trans "İdarə et" %}</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">{% trans "Siniflər" %}</h5>
+                                    <p class="card-text display-4">{{ request.user.school.classroom_set.count }}</p>
+                                    <a href="{% url 'school:classroom_list' %}" class="btn btn-light">{% trans "İdarə et" %}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

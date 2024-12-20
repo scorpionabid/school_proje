@@ -1,0 +1,134 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}
+    {% if report %}
+        {% translate "Hesabat Redaktəsi" %} - {{ report.title }}
+    {% else %}
+        {% translate "Yeni Hesabat" %} - {{ sector.name }}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>
+                            {% if report %}
+                                {% translate "Hesabat Redaktəsi" %}
+                            {% else %}
+                                {% translate "Yeni Hesabat" %}
+                            {% endif %}
+                        </h6>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'sector:sector_reports' sector.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-arrow-left me-2"></i>{% translate "Geri" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Hesabat məlumatları -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="title" class="form-control-label">{% translate "Başlıq" %}</label>
+                                    <input class="form-control" type="text" id="title" name="title" 
+                                           value="{{ report.title|default:'' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="report_type" class="form-control-label">{% translate "Hesabat növü" %}</label>
+                                    <select class="form-select" id="report_type" name="report_type" required>
+                                        {% for type_code, type_name in report_types %}
+                                            <option value="{{ type_code }}" {% if report and report.report_type == type_code %}selected{% endif %}>
+                                                {{ type_name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="report_period" class="form-control-label">{% translate "Hesabat dövrü" %}</label>
+                                    <input class="form-control" type="date" id="report_period" name="report_period" 
+                                           value="{{ report.report_period|date:'Y-m-d'|default:'' }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hesabat məzmunu -->
+                        <div class="form-group">
+                            <label for="content" class="form-control-label">{% translate "Məzmun" %}</label>
+                            <textarea class="form-control" id="content" name="content" rows="10" required>{{ report.content|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Əlavə fayllar -->
+                        <div class="form-group">
+                            <label for="attachments" class="form-control-label">{% translate "Əlavə fayllar" %}</label>
+                            <input class="form-control" type="file" id="attachments" name="attachments" 
+                                   {% if not report %}required{% endif %}>
+                            {% if report and report.attachments %}
+                                <small class="text-muted">
+                                    {% translate "Mövcud fayl" %}: {{ report.attachments.name }}
+                                </small>
+                            {% endif %}
+                        </div>
+
+                        <!-- Təsdiq düymələri -->
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="button" class="btn btn-secondary me-2" onclick="history.back()">
+                                {% translate "Ləğv et" %}
+                            </button>
+                            {% if report and report.status == 'DRAFT' %}
+                                <button type="submit" name="action" value="save_draft" class="btn btn-info me-2">
+                                    {% translate "Qaralama kimi saxla" %}
+                                </button>
+                                <button type="submit" name="action" value="submit" class="btn btn-primary">
+                                    {% translate "Təsdiqə göndər" %}
+                                </button>
+                            {% else %}
+                                <button type="submit" name="action" value="save_draft" class="btn btn-info me-2">
+                                    {% translate "Qaralama kimi saxla" %}
+                                </button>
+                                <button type="submit" name="action" value="submit" class="btn btn-primary">
+                                    {% translate "Təqdim et" %}
+                                </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+tinymce.init({
+    selector: '#content',
+    height: 400,
+    menubar: false,
+    plugins: [
+        'advlist autolink lists link image charmap print preview anchor',
+        'searchreplace visualblocks code fullscreen',
+        'insertdatetime media table paste code help wordcount'
+    ],
+    toolbar: 'undo redo | formatselect | ' +
+    'bold italic backcolor | alignleft aligncenter ' +
+    'alignright alignjustify | bullist numlist outdent indent | ' +
+    'removeformat | help',
+    content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; }'
+});
+</script>
+{% endblock %}
+{% endblock %}

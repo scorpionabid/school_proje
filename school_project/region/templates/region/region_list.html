@@ -1,0 +1,122 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Regionlar{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Statistika -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Ümumi Statistika</h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-1">Ümumi region sayı:</p>
+                            <h3 class="text-primary">{{ total_regions }}</h3>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1">Aktiv regionlar:</p>
+                            <h3 class="text-success">{{ active_regions }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Region siyahısı -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title mb-0">Regionlar</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ad</th>
+                            <th>UTIS Kodu</th>
+                            <th>Rəhbər</th>
+                            <th>Məktəb sayı</th>
+                            <th>Status</th>
+                            <th>Əməliyyatlar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for region in regions %}
+                        <tr>
+                            <td>{{ region.name }}</td>
+                            <td>{{ region.utis_code }}</td>
+                            <td>
+                                {% if region.director %}
+                                    {{ region.director.get_full_name }}
+                                {% else %}
+                                    <span class="text-muted">Təyin edilməyib</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ region.total_schools }}</td>
+                            <td>
+                                {% if region.is_active %}
+                                    <span class="badge bg-success">Aktiv</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Deaktiv</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'region:region_detail' region.pk %}" 
+                                       class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> Ətraflı
+                                    </a>
+                                    <a href="{% url 'region:region_statistics' region.pk %}" 
+                                       class="btn btn-sm btn-info">
+                                        <i class="fas fa-chart-bar"></i> Statistika
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">Region tapılmadı</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if regions.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if regions.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ regions.previous_page_number }}">Əvvəlki</a>
+            </li>
+            {% endif %}
+
+            {% for i in regions.paginator.page_range %}
+                {% if regions.number == i %}
+                <li class="page-item active">
+                    <span class="page-link">{{ i }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if regions.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ regions.next_page_number }}">Növbəti</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,297 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ sector.name }} - {% translate "Sektor Statistikası" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Başlıq -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>{% translate "Sektor Statistikası" %}</h6>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'sector:sector_detail' sector.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-arrow-left me-2"></i>{% translate "Geri" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Əsas statistika kartları -->
+    <div class="row">
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">{% translate "Məktəb Sayı" %}</p>
+                                <h5 class="font-weight-bolder mb-0">
+                                    {{ total_schools }}
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
+                                <i class="fas fa-school text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">{% translate "Şagird Sayı" %}</p>
+                                <h5 class="font-weight-bolder mb-0">
+                                    {{ total_students }}
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md">
+                                <i class="fas fa-user-graduate text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">{% translate "Müəllim Sayı" %}</p>
+                                <h5 class="font-weight-bolder mb-0">
+                                    {{ total_teachers }}
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md">
+                                <i class="fas fa-chalkboard-teacher text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">{% translate "Şagird/Müəllim Nisbəti" %}</p>
+                                <h5 class="font-weight-bolder mb-0">
+                                    {{ student_teacher_ratio|floatformat:1 }}
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-info shadow text-center border-radius-md">
+                                <i class="fas fa-chart-pie text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistika qrafikləri -->
+    <div class="row mt-4">
+        <!-- Məktəb növləri -->
+        <div class="col-lg-6 mb-lg-0 mb-4">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>{% translate "Məktəb Növləri" %}</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="schoolTypesChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Şagird statistikası -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>{% translate "Şagird Statistikası" %}</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="studentStatsChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Əlavə statistika -->
+    <div class="row mt-4">
+        <!-- Müəllim kvalifikasiyası -->
+        <div class="col-lg-6 mb-lg-0 mb-4">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>{% translate "Müəllim Kvalifikasiyası" %}</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="teacherQualificationChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Məktəb resursları -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>{% translate "Məktəb Resursları" %}</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="schoolResourcesChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Məktəb növləri qrafiki
+const schoolTypesCtx = document.getElementById('schoolTypesChart').getContext('2d');
+new Chart(schoolTypesCtx, {
+    type: 'pie',
+    data: {
+        labels: ['Tam orta', 'Ümumi orta', 'İbtidai', 'Lisey', 'Gimnaziya'],
+        datasets: [{
+            data: [45, 30, 15, 5, 5],
+            backgroundColor: [
+                'rgba(66, 133, 244, 0.8)',
+                'rgba(52, 168, 83, 0.8)',
+                'rgba(251, 188, 4, 0.8)',
+                'rgba(234, 67, 53, 0.8)',
+                'rgba(103, 58, 183, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Şagird statistikası qrafiki
+const studentStatsCtx = document.getElementById('studentStatsChart').getContext('2d');
+new Chart(studentStatsCtx, {
+    type: 'bar',
+    data: {
+        labels: ['I-IV', 'V-IX', 'X-XI'],
+        datasets: [{
+            label: 'Oğlan',
+            data: [1200, 1500, 800],
+            backgroundColor: 'rgba(66, 133, 244, 0.8)'
+        }, {
+            label: 'Qız',
+            data: [1100, 1400, 750],
+            backgroundColor: 'rgba(234, 67, 53, 0.8)'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Müəllim kvalifikasiyası qrafiki
+const teacherQualificationCtx = document.getElementById('teacherQualificationChart').getContext('2d');
+new Chart(teacherQualificationCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Ali təhsil', 'Orta ixtisas', 'Peşə təhsili', 'Digər'],
+        datasets: [{
+            data: [70, 20, 8, 2],
+            backgroundColor: [
+                'rgba(52, 168, 83, 0.8)',
+                'rgba(251, 188, 4, 0.8)',
+                'rgba(234, 67, 53, 0.8)',
+                'rgba(103, 58, 183, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Məktəb resursları qrafiki
+const schoolResourcesCtx = document.getElementById('schoolResourcesChart').getContext('2d');
+new Chart(schoolResourcesCtx, {
+    type: 'radar',
+    data: {
+        labels: [
+            'Kompüter',
+            'Proyektor',
+            'İnternet',
+            'Laboratoriya',
+            'Kitabxana',
+            'İdman zalı'
+        ],
+        datasets: [{
+            label: 'Resurs təminatı (%)',
+            data: [85, 70, 60, 75, 90, 80],
+            fill: true,
+            backgroundColor: 'rgba(66, 133, 244, 0.2)',
+            borderColor: 'rgba(66, 133, 244, 1)',
+            pointBackgroundColor: 'rgba(66, 133, 244, 1)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgba(66, 133, 244, 1)'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            r: {
+                angleLines: {
+                    display: true
+                },
+                suggestedMin: 0,
+                suggestedMax: 100
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

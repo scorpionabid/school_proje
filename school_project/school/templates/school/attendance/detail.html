@@ -1,0 +1,139 @@
+{% extends 'school/base.html' %}
+{% load i18n static %}
+
+{% block title %}{% trans "Detallı Davamiyyət" %}{% endblock %}
+
+{% block school_content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{% trans "Detallı Davamiyyət" %}</h1>
+        <div class="d-flex">
+            <div class="input-group">
+                <input type="date" class="form-control" id="attendanceDate" value="{{ date|date:'Y-m-d' }}">
+                <button class="btn btn-primary" id="updateStats">
+                    <i class="fas fa-sync-alt"></i> {% trans "Yenilə" %}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Classes Table -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered datatable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Sinif" %}</th>
+                            <th>{% trans "Ümumi Şagird" %}</th>
+                            <th>{% trans "İştirak Edənlər" %}</th>
+                            <th>{% trans "Üzürlü Qaib" %}</th>
+                            <th>{% trans "Üzürsüz Qaib" %}</th>
+                            <th>{% trans "İştirak Faizi" %}</th>
+                            <th>{% trans "Əməliyyatlar" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for class in classes %}
+                        <tr>
+                            <td>{{ class.name }}</td>
+                            <td>{{ class.total_students }}</td>
+                            <td>{{ class.present_students }}</td>
+                            <td>{{ class.excused_absences }}</td>
+                            <td>{{ class.unexcused_absences }}</td>
+                            <td>
+                                {% if class.total_students > 0 %}
+                                    {{ class.present_students|divisibleby:class.total_students|floatformat:1 }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary view-details" data-class-id="{{ class.id }}">
+                                    <i class="fas fa-eye"></i> {% trans "Detallı Bax" %}
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Sinif Davamiyyəti" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table" id="studentsTable">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Şagird" %}</th>
+                                <th>1</th>
+                                <th>2</th>
+                                <th>3</th>
+                                <th>4</th>
+                                <th>5</th>
+                                <th>6</th>
+                                <th>7</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Will be populated via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    var table = $('.datatable').DataTable({
+        language: {
+            url: "{% static 'vendor/datatables/az.json' %}"
+        },
+        order: [[5, 'desc']]  // Sort by attendance percentage by default
+    });
+
+    // Date change handler
+    $('#attendanceDate').change(function() {
+        $('#updateStats').click();
+    });
+
+    // Update button handler
+    $('#updateStats').click(function() {
+        var date = $('#attendanceDate').val();
+        window.location.href = '{% url "school:attendance_detail" %}?date=' + date;
+    });
+
+    // View details button handler
+    $('.view-details').click(function() {
+        var classId = $(this).data('class-id');
+        var date = $('#attendanceDate').val();
+        
+        // Load student attendance details via AJAX
+        $.get('{% url "school:attendance_class_detail" %}', {
+            class_id: classId,
+            date: date
+        }, function(data) {
+            $('#studentsTable tbody').html(data);
+            $('#detailsModal').modal('show');
+        });
+    });
+});
+</script>
+{% endblock %}

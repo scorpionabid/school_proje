@@ -1,0 +1,170 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">{{ classroom.name }} - {% trans "Davamiyyət" %}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'school:dashboard' %}">{% trans "Ana Səhifə" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:attendance_list' %}">{% trans "Davamiyyət" %}</a></li>
+                        <li class="breadcrumb-item active">{{ classroom.name }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Filter Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Filtrlər" %}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="form-inline">
+                        {{ filter_form.as_p }}
+                        <button type="submit" class="btn btn-primary ml-2">
+                            <i class="fas fa-filter"></i> {% trans "Filtrlə" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-info">
+                        <div class="inner">
+                            <h3>{{ classroom.students.count }}</h3>
+                            <p>{% trans "Ümumi şagird" %}</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-success">
+                        <div class="inner">
+                            <h3>{{ date_from|date:"d.m.Y" }}</h3>
+                            <p>{% trans "Başlanğıc tarix" %}</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-warning">
+                        <div class="inner">
+                            <h3>{{ date_to|date:"d.m.Y" }}</h3>
+                            <p>{% trans "Son tarix" %}</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-danger">
+                        <div class="inner">
+                            {% with first_student=attendance_data|first %}
+                                <h3>{{ first_student.total_days }}</h3>
+                            {% endwith %}
+                            <p>{% trans "Ümumi dərs günü" %}</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Davamiyyət cədvəli" %}</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped datatable">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Şagird" %}</th>
+                                    <th>{% trans "Ümumi gün" %}</th>
+                                    <th>{% trans "İştirak" %}</th>
+                                    <th>{% trans "Qayıb" %}</th>
+                                    <th>{% trans "İştirak faizi" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in attendance_data %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'school:student_attendance' pk=data.student.pk %}">
+                                            {{ data.student.get_full_name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ data.total_days }}</td>
+                                    <td>{{ data.present_days }}</td>
+                                    <td>{{ data.absent_days }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                style="width: {{ data.attendance_rate }}%"
+                                                aria-valuenow="{{ data.attendance_rate }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                                {{ data.attendance_rate|floatformat:1 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('.datatable').DataTable({
+        "language": {
+            "url": "{% static 'vendor/datatables/az.json' %}"
+        },
+        "order": [[4, "desc"]],  // Sort by attendance rate by default
+        "pageLength": 25
+    });
+
+    // Initialize date range picker
+    $('input[name="date_from"], input[name="date_to"]').daterangepicker({
+        singleDatePicker: true,
+        locale: {
+            format: 'YYYY-MM-DD'
+        }
+    });
+});
+</script>
+{% endblock %}

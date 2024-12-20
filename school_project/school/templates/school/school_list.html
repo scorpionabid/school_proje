@@ -1,0 +1,148 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Məktəblər" %}</h3>
+                    <div class="card-tools">
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" placeholder="{% trans 'Axtar...' %}">
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <select name="school_type" class="form-select">
+                                <option value="">{% trans "Məktəb növü" %}</option>
+                                {% for value, label in school_types %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="sector" class="form-select">
+                                <option value="">{% trans "Sektor" %}</option>
+                                {% for sector in sectors %}
+                                <option value="{{ sector.id }}">{{ sector.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="is_active" class="form-select">
+                                <option value="">{% trans "Status" %}</option>
+                                <option value="true">{% trans "Aktiv" %}</option>
+                                <option value="false">{% trans "Deaktiv" %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-primary" id="filter-button">
+                                {% trans "Filtr" %}
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="reset-button">
+                                {% trans "Sıfırla" %}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="schools-table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Ad" %}</th>
+                                    <th>{% trans "UTIS kodu" %}</th>
+                                    <th>{% trans "Növ" %}</th>
+                                    <th>{% trans "Sektor" %}</th>
+                                    <th>{% trans "Şagird sayı" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                    <th>{% trans "Əməliyyatlar" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for school in schools %}
+                                <tr>
+                                    <td>{{ school.name }}</td>
+                                    <td>{{ school.utis_code }}</td>
+                                    <td>{{ school.get_school_type_display }}</td>
+                                    <td>{{ school.sector.name }}</td>
+                                    <td>{{ school.total_students }}</td>
+                                    <td>
+                                        {% if school.is_active %}
+                                        <span class="badge bg-success">{% trans "Aktiv" %}</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">{% trans "Deaktiv" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'school:school_detail' pk=school.pk %}" 
+                                           class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'school:school_dashboard' pk=school.pk %}"
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fas fa-tachometer-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% include 'core/includes/pagination.html' with page_obj=schools %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    // DataTable
+    var table = $('#schools-table').DataTable({
+        "paging": false,
+        "ordering": true,
+        "info": false,
+        "searching": false
+    });
+    
+    // Filter function
+    function filterSchools() {
+        var params = {
+            school_type: $('select[name="school_type"]').val(),
+            sector: $('select[name="sector"]').val(),
+            is_active: $('select[name="is_active"]').val(),
+            search: $('input[name="search"]').val()
+        };
+        
+        window.location.href = '?' + $.param(params);
+    }
+    
+    // Event handlers
+    $('#filter-button').click(filterSchools);
+    
+    $('#reset-button').click(function() {
+        window.location.href = '{% url "school:school_list" %}';
+    });
+    
+    $('input[name="search"]').keypress(function(e) {
+        if (e.which == 13) {
+            filterSchools();
+        }
+    });
+});
+</script>
+{% endblock %}

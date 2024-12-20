@@ -1,0 +1,53 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">{% trans "İşçini Sil" %}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'school:dashboard' %}">{% trans "Ana Səhifə" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:settings' %}">{% trans "Ayarlar" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:staff_list' %}">{% trans "İşçilər" %}</a></li>
+                        <li class="breadcrumb-item active">{% trans "Sil" %}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">{% trans "Təsdiq" %}</h3>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                <p>{% trans "Bu işçini silmək istədiyinizə əminsiniz?" %}</p>
+                                <p><strong>{% trans "İşçi" %}:</strong> {{ object.get_full_name }}</p>
+                                <p><strong>{% trans "Vəzifə" %}:</strong> {{ object.position }}</p>
+                                <p><strong>{% trans "İşçi növü" %}:</strong> {{ object.get_staff_type_display }}</p>
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-danger">{% trans "Sil" %}</button>
+                                <a href="{% url 'school:staff_list' %}" class="btn btn-secondary">{% trans "Ləğv Et" %}</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

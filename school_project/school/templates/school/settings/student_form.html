@@ -1,0 +1,292 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">
+                        {% if form.instance.pk %}
+                            {% trans "Şagird Məlumatlarını Redaktə Et" %}
+                        {% else %}
+                            {% trans "Yeni Şagird" %}
+                        {% endif %}
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'school:dashboard' %}">{% trans "Ana Səhifə" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:settings' %}">{% trans "Ayarlar" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:student_list' %}">{% trans "Şagirdlər" %}</a></li>
+                        <li class="breadcrumb-item active">
+                            {% if form.instance.pk %}
+                                {% trans "Redaktə" %}
+                            {% else %}
+                                {% trans "Yeni" %}
+                            {% endif %}
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                {% if form.instance.pk %}
+                                    {% trans "Şagird Məlumatlarını Redaktə Et" %}
+                                {% else %}
+                                    {% trans "Yeni Şagird Məlumatları" %}
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Şəxsi məlumatlar -->
+                                <h5 class="mb-3">{% trans "Şəxsi məlumatlar" %}</h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                                            {{ form.first_name }}
+                                            {% if form.first_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.first_name.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                                            {{ form.last_name }}
+                                            {% if form.last_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.last_name.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.father_name.id_for_label }}">{{ form.father_name.label }}</label>
+                                            {{ form.father_name }}
+                                            {% if form.father_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.father_name.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.birth_date.id_for_label }}">{{ form.birth_date.label }}</label>
+                                            {{ form.birth_date }}
+                                            {% if form.birth_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.birth_date.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.gender.id_for_label }}">{{ form.gender.label }}</label>
+                                            {{ form.gender }}
+                                            {% if form.gender.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.gender.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.utis_id.id_for_label }}">{{ form.utis_id.label }}</label>
+                                            {{ form.utis_id }}
+                                            {% if form.utis_id.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.utis_id.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Təhsil məlumatları -->
+                                <h5 class="mt-4 mb-3">{% trans "Təhsil məlumatları" %}</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.class_room.id_for_label }}">{{ form.class_room.label }}</label>
+                                            {{ form.class_room }}
+                                            {% if form.class_room.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.class_room.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.admission_date.id_for_label }}">{{ form.admission_date.label }}</label>
+                                            {{ form.admission_date }}
+                                            {% if form.admission_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.admission_date.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Əlaqə məlumatları -->
+                                <h5 class="mt-4 mb-3">{% trans "Əlaqə məlumatları" %}</h5>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="{{ form.address.id_for_label }}">{{ form.address.label }}</label>
+                                            {{ form.address }}
+                                            {% if form.address.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.address.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
+                                            {{ form.phone }}
+                                            {% if form.phone.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.phone.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                                            {{ form.email }}
+                                            {% if form.email.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.email.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Valideyn məlumatları -->
+                                <h5 class="mt-4 mb-3">{% trans "Valideyn məlumatları" %}</h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.parent_name.id_for_label }}">{{ form.parent_name.label }}</label>
+                                            {{ form.parent_name }}
+                                            {% if form.parent_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.parent_name.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.parent_phone.id_for_label }}">{{ form.parent_phone.label }}</label>
+                                            {{ form.parent_phone }}
+                                            {% if form.parent_phone.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.parent_phone.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.parent_email.id_for_label }}">{{ form.parent_email.label }}</label>
+                                            {{ form.parent_email }}
+                                            {% if form.parent_email.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.parent_email.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Status -->
+                                <div class="row mt-4">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <div class="custom-control custom-switch">
+                                                {{ form.is_active }}
+                                                <label class="custom-control-label" for="{{ form.is_active.id_for_label }}">
+                                                    {{ form.is_active.label }}
+                                                </label>
+                                            </div>
+                                            {% if form.is_active.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.is_active.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if form.instance.pk %}
+                                        {% trans "Yadda Saxla" %}
+                                    {% else %}
+                                        {% trans "Əlavə Et" %}
+                                    {% endif %}
+                                </button>
+                                <a href="{% url 'school:student_list' %}" class="btn btn-secondary">
+                                    {% trans "Ləğv Et" %}
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    // Add Bootstrap classes to form elements
+    $('input:not([type="checkbox"]), select, textarea').addClass('form-control');
+    $('.custom-switch input').removeClass('form-control');
+});
+</script>
+{% endblock %}

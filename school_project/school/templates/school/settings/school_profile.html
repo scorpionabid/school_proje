@@ -1,0 +1,113 @@
+{% extends 'school/base.html' %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Məktəb Profili" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Məktəb Profili" %}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Basic Information -->
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">{% trans "Əsas Məlumatlar" %}</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ form.name|as_crispy_field }}
+                                        {{ form.utis_code|as_crispy_field }}
+                                        {{ form.school_type|as_crispy_field }}
+                                        {{ form.sector|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contact Information -->
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">{% trans "Əlaqə Məlumatları" %}</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ form.address|as_crispy_field }}
+                                        {{ form.phone|as_crispy_field }}
+                                        {{ form.email|as_crispy_field }}
+                                        {{ form.website|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Information -->
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">{% trans "Əlavə Məlumatlar" %}</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ form.foundation_year|as_crispy_field }}
+                                        {{ form.shift_count|as_crispy_field }}
+                                        {{ form.language|as_crispy_field }}
+                                        {{ form.principal|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status Information -->
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">{% trans "Status Məlumatları" %}</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ form.is_active|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    {% trans "Yadda saxla" %}
+                                </button>
+                                <a href="{% url 'school:settings' %}" class="btn btn-secondary">
+                                    {% trans "Ləğv et" %}
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Initialize select2 for dropdowns
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Initialize datepicker for foundation_year
+        $('#id_foundation_year').datepicker({
+            format: 'yyyy',
+            viewMode: 'years',
+            minViewMode: 'years',
+            autoclose: true
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'core/base.html' %}
+
+{% block title %}İcazə Xətası - Məktəb Nəzarət Sistemi{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="display-1 text-danger">403</h1>
+                <h3 class="card-title">İcazə Xətası</h3>
+                <p class="card-text">Bu səhifəyə giriş icazəniz yoxdur.</p>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">Dashboard-a Qayıt</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

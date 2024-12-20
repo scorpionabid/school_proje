@@ -1,0 +1,295 @@
+{% extends 'school/base.html' %}
+{% load i18n static %}
+{% load school_tags %}
+
+{% block title %}{% trans "Ümumi Davamiyyət" %}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .attendance-input {
+        width: 60px;
+        text-align: center;
+    }
+    .note-input {
+        width: 200px;
+    }
+</style>
+{% endblock %}
+
+{% block school_content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{% trans "Ümumi Davamiyyət" %}</h1>
+        <div class="d-flex">
+            <div class="input-group">
+                <input type="date" class="form-control" id="attendanceDate" value="{{ date|date:'Y-m-d' }}">
+                <button class="btn btn-primary" id="updateStats">
+                    <i class="fas fa-sync-alt"></i> {% trans "Yenilə" %}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row">
+        <!-- Total Students -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                {% trans "Ümumi Şagird Sayı" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_students }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Present Students -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {% trans "İştirak Edənlər" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalPresent">
+                                {{ present_count }}
+                                <small class="text-muted">({{ present_count|percentage:total_students|floatformat:1 }}%)</small>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Excused Absences -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {% trans "Üzürlü Qayıblar" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalExcused">
+                                {{ excused_absences }}
+                                <small class="text-muted">({{ excused_absences|percentage:total_students|floatformat:1 }}%)</small>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unexcused Absences -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                {% trans "Üzürsüz Qayıblar" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalUnexcused">
+                                {{ unexcused_absences }}
+                                <small class="text-muted">({{ unexcused_absences|percentage:total_students|floatformat:1 }}%)</small>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-times fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">{% trans "Sinif Davamiyyəti" %}</h6>
+            <div>
+                <button type="button" class="btn btn-success btn-sm save-all">
+                    <i class="fas fa-save"></i>
+                </button>
+                <button type="button" class="btn btn-danger btn-sm cancel-all">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="attendanceTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Sinif" %}</th>
+                            <th>{% trans "Sinif Rəhbəri" %}</th>
+                            <th>{% trans "Ümumi" %}</th>
+                            <th>{% trans "İştirak edənlər" %}</th>
+                            <th>{% trans "İcazəli" %}</th>
+                            <th>{% trans "İcazəsiz" %}</th>
+                            <th>{% trans "Qeyd" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for classroom in classrooms %}
+                        <tr data-classroom-id="{{ classroom.id }}">
+                            <td>{{ classroom.get_full_name }}</td>
+                            <td>{{ classroom.class_teacher.get_full_name }}</td>
+                            <td class="total-students">{{ classroom.current_students }}</td>
+                            <td>
+                                <input type="number" class="form-control attendance-input present-input" 
+                                    value="{{ classroom.attendance_stats.present }}" min="0" 
+                                    max="{{ classroom.current_students }}">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control attendance-input excused-input" 
+                                    value="{{ classroom.attendance_stats.excused }}" min="0" 
+                                    max="{{ classroom.current_students }}">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control attendance-input unexcused-input" 
+                                    value="{{ classroom.attendance_stats.unexcused }}" min="0" 
+                                    max="{{ classroom.current_students }}">
+                            </td>
+                            <td>
+                                <input type="text" class="form-control note-input" 
+                                    value="{{ classroom.attendance_stats.note|default:'' }}" 
+                                    placeholder="{% trans 'Qeyd əlavə edin...' %}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    function updateRowStats(row) {
+        var totalStudents = parseInt(row.find('.total-students').text());
+        var present = parseInt(row.find('.present-input').val()) || 0;
+        var excused = parseInt(row.find('.excused-input').val()) || 0;
+        var unexcused = parseInt(row.find('.unexcused-input').val()) || 0;
+        
+        // Validate input values
+        if (present + excused + unexcused > totalStudents) {
+            toastr.warning('{% trans "Qaib sayı şagird sayından çox ola bilməz" %}');
+            if (present > totalStudents) {
+                present = totalStudents;
+                row.find('.present-input').val(present);
+            }
+            if (excused > totalStudents) {
+                excused = totalStudents;
+                row.find('.excused-input').val(excused);
+            }
+            if (unexcused > totalStudents) {
+                unexcused = totalStudents;
+                row.find('.unexcused-input').val(unexcused);
+            }
+        }
+    }
+
+    function updateTotalStats() {
+        var totalPresent = 0;
+        var totalExcused = 0;
+        var totalUnexcused = 0;
+        var totalStudents = 0;
+        
+        $('#attendanceTable tbody tr').each(function() {
+            var row = $(this);
+            totalStudents += parseInt(row.find('.total-students').text());
+            totalPresent += parseInt(row.find('.present-input').val()) || 0;
+            totalExcused += parseInt(row.find('.excused-input').val()) || 0;
+            totalUnexcused += parseInt(row.find('.unexcused-input').val()) || 0;
+        });
+        
+        $('#totalPresent').html(totalPresent + ' <small class="text-muted">(' + ((totalPresent / totalStudents) * 100).toFixed(1) + '%)</small>');
+        $('#totalExcused').html(totalExcused + ' <small class="text-muted">(' + ((totalExcused / totalStudents) * 100).toFixed(1) + '%)</small>');
+        $('#totalUnexcused').html(totalUnexcused + ' <small class="text-muted">(' + ((totalUnexcused / totalStudents) * 100).toFixed(1) + '%)</small>');
+    }
+    
+    // Input change handlers
+    $('.attendance-input').on('input', function() {
+        var row = $(this).closest('tr');
+        updateRowStats(row);
+        updateTotalStats();
+    });
+
+    // Date change handler
+    $('#updateStats').click(function() {
+        var date = $('#attendanceDate').val();
+        window.location.href = '{% url "school:attendance_list" %}?date=' + date;
+    });
+
+    // Save button handler
+    $('.save-all').click(function() {
+        var date = $('#attendanceDate').val();
+        var data = [];
+        
+        $('#attendanceTable tbody tr').each(function() {
+            var row = $(this);
+            var classroomId = row.data('classroom-id');
+            var present = parseInt(row.find('.present-input').val()) || 0;
+            var excused = parseInt(row.find('.excused-input').val()) || 0;
+            var unexcused = parseInt(row.find('.unexcused-input').val()) || 0;
+            var note = row.find('.note-input').val();
+            
+            data.push({
+                classroom_id: classroomId,
+                present: present,
+                excused: excused,
+                unexcused: unexcused,
+                note: note
+            });
+        });
+        
+        $.ajax({
+            url: '{% url "school:attendance_bulk_create" %}',
+            type: 'POST',
+            data: JSON.stringify({
+                date: date,
+                attendance: data
+            }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    toastr.success('{% trans "Davamiyyət uğurla yadda saxlanıldı" %}');
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: function() {
+                toastr.error('{% trans "Xəta baş verdi" %}');
+            }
+        });
+    });
+    
+    // Cancel button handler
+    $('.cancel-all').click(function() {
+        window.location.reload();
+    });
+});
+</script>
+{% endblock %}

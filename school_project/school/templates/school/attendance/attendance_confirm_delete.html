@@ -1,0 +1,67 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">{% trans "Davamiyyət qeydini sil" %}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'school:dashboard' %}">{% trans "Ana Səhifə" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:attendance_list' %}">{% trans "Davamiyyət" %}</a></li>
+                        <li class="breadcrumb-item active">{% trans "Sil" %}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <p>{% trans "Bu davamiyyət qeydini silmək istədiyinizə əminsiniz?" %}</p>
+                            <dl class="row">
+                                <dt class="col-sm-3">{% trans "Şagird" %}</dt>
+                                <dd class="col-sm-9">{{ object.student.get_full_name }}</dd>
+
+                                <dt class="col-sm-3">{% trans "Tarix" %}</dt>
+                                <dd class="col-sm-9">{{ object.date }}</dd>
+
+                                <dt class="col-sm-3">{% trans "Status" %}</dt>
+                                <dd class="col-sm-9">
+                                    {% if object.is_present %}
+                                        <span class="badge badge-success">{% trans "İştirak" %}</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">{% trans "İştirak etməyib" %}</span>
+                                    {% endif %}
+                                </dd>
+
+                                <dt class="col-sm-3">{% trans "Qeyd edən" %}</dt>
+                                <dd class="col-sm-9">{{ object.recorded_by.get_full_name }}</dd>
+
+                                <dt class="col-sm-3">{% trans "Qeyd tarixi" %}</dt>
+                                <dd class="col-sm-9">{{ object.created_at }}</dd>
+                            </dl>
+
+                            <form method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">{% trans "Sil" %}</button>
+                                <a href="{% url 'school:attendance_list' %}" class="btn btn-default">{% trans "Ləğv et" %}</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

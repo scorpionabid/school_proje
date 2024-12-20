@@ -1,0 +1,104 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ region.name }} - Sənədlər{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Başlıq və filter -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>{{ region.name }} - Sənədlər</h3>
+        <div class="btn-group">
+            <a href="{% url 'region:region_documents' region.pk %}" 
+               class="btn btn-outline-primary {% if not request.GET.type %}active{% endif %}">
+                Hamısı
+            </a>
+            {% for type_code, type_name in document_types %}
+            <a href="{% url 'region:region_documents' region.pk %}?type={{ type_code }}" 
+               class="btn btn-outline-primary {% if request.GET.type == type_code %}active{% endif %}">
+                {{ type_name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Sənəd siyahısı -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Başlıq</th>
+                            <th>Növ</th>
+                            <th>Açıqlama</th>
+                            <th>Yükləyən</th>
+                            <th>Tarix</th>
+                            <th>Fayl</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in documents %}
+                        <tr>
+                            <td>{{ doc.title }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ doc.get_document_type_display }}</span>
+                            </td>
+                            <td>{{ doc.description|truncatechars:50 }}</td>
+                            <td>{{ doc.uploaded_by.get_full_name }}</td>
+                            <td>{{ doc.uploaded_at|date:"d.m.Y H:i" }}</td>
+                            <td>
+                                <a href="{{ doc.file.url }}" class="btn btn-sm btn-primary" target="_blank">
+                                    <i class="fas fa-download"></i> Yüklə
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">Sənəd tapılmadı</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if documents.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if documents.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ documents.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                    Əvvəlki
+                </a>
+            </li>
+            {% endif %}
+
+            {% for i in documents.paginator.page_range %}
+                {% if documents.number == i %}
+                <li class="page-item active">
+                    <span class="page-link">{{ i }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                        {{ i }}
+                    </a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if documents.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ documents.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                    Növbəti
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

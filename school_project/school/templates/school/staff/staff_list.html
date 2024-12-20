@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "İşçilər" %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{% trans "İşçilər" %}</h2>
+        </div>
+        <div class="col text-end">
+            <a href="{% url 'school:staff_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> {% trans "Yeni işçi" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="{% trans 'Ad, soyad və ya vəzifə ilə axtar...' %}" value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="staff_type" class="form-select">
+                        <option value="">{% trans "Bütün vəzifələr" %}</option>
+                        <option value="TEACHER" {% if request.GET.staff_type == 'TEACHER' %}selected{% endif %}>{% trans "Müəllim" %}</option>
+                        <option value="ADMIN" {% if request.GET.staff_type == 'ADMIN' %}selected{% endif %}>{% trans "İnzibatçı" %}</option>
+                        <option value="OTHER" {% if request.GET.staff_type == 'OTHER' %}selected{% endif %}>{% trans "Digər" %}</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="is_active" class="form-select">
+                        <option value="">{% trans "Bütün statuslar" %}</option>
+                        <option value="true" {% if request.GET.is_active == 'true' %}selected{% endif %}>{% trans "Aktiv" %}</option>
+                        <option value="false" {% if request.GET.is_active == 'false' %}selected{% endif %}>{% trans "Deaktiv" %}</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">{% trans "Axtar" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Staff List -->
+    <div class="card">
+        <div class="card-body">
+            {% if staff_list %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Ad Soyad" %}</th>
+                            <th>{% trans "Vəzifə" %}</th>
+                            <th>{% trans "Telefon" %}</th>
+                            <th>{% trans "Email" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Əməliyyatlar" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for staff in staff_list %}
+                        <tr>
+                            <td>{{ staff.get_full_name }}</td>
+                            <td>{{ staff.get_staff_type_display }}</td>
+                            <td>{{ staff.phone }}</td>
+                            <td>{{ staff.email }}</td>
+                            <td>
+                                {% if staff.is_active %}
+                                <span class="badge bg-success">{% trans "Aktiv" %}</span>
+                                {% else %}
+                                <span class="badge bg-danger">{% trans "Deaktiv" %}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'school:staff_update' staff.pk %}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'school:staff_delete' staff.pk %}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                {% trans "Heç bir işçi tapılmadı." %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

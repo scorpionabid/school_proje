@@ -1,0 +1,215 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ sector.name }} - {% translate "Sektor Sənədləri" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Başlıq və filtrlər -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>{% translate "Sektor Sənədləri" %}</h6>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'sector:sector_detail' sector.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-arrow-left me-2"></i>{% translate "Geri" %}
+                            </a>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                                <i class="fas fa-plus me-2"></i>{% translate "Yeni Sənəd" %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Filtrlər -->
+                    <form method="get" class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label for="type" class="form-label">{% translate "Sənəd Növü" %}</label>
+                            <select name="type" id="type" class="form-select" onchange="this.form.submit()">
+                                <option value="">{% translate "Bütün növlər" %}</option>
+                                {% for type_code, type_name in document_types %}
+                                    <option value="{{ type_code }}" {% if request.GET.type == type_code %}selected{% endif %}>
+                                        {{ type_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+
+                    <!-- Sənədlər cədvəli -->
+                    <div class="table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                        {% translate "Sənəd" %}
+                                    </th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                        {% translate "Növü" %}
+                                    </th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                        {% translate "Yükləyən" %}
+                                    </th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                        {% translate "Tarix" %}
+                                    </th>
+                                    <th class="text-secondary opacity-7"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for document in documents %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 class="mb-0 text-sm">{{ document.title }}</h6>
+                                                <p class="text-xs text-secondary mb-0">{{ document.description|truncatechars:50 }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-sm bg-gradient-info">
+                                            {{ document.get_document_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ document.uploaded_by.get_full_name }}</p>
+                                        <p class="text-xs text-secondary mb-0">{{ document.uploaded_by.email }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ document.uploaded_at|date:"d.m.Y" }}</p>
+                                        <p class="text-xs text-secondary mb-0">{{ document.uploaded_at|time:"H:i" }}</p>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="d-flex gap-2 justify-content-end">
+                                            <a href="{{ document.file.url }}" class="btn btn-link text-dark px-3 mb-0" target="_blank">
+                                                <i class="fas fa-download text-dark me-2"></i>{% translate "Yüklə" %}
+                                            </a>
+                                            <button type="button" class="btn btn-link text-danger px-3 mb-0" 
+                                                    onclick="confirmDelete('{{ document.pk }}')">
+                                                <i class="fas fa-trash text-danger me-2"></i>{% translate "Sil" %}
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <p class="text-sm mb-0">{% translate "Heç bir sənəd tapılmadı." %}</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if documents.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if documents.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ documents.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in documents.paginator.page_range %}
+                                {% if documents.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if documents.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ documents.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Yeni sənəd modal -->
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadDocumentModalLabel">{% translate "Yeni Sənəd" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">{% translate "Başlıq" %}</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="document_type" class="form-label">{% translate "Sənəd növü" %}</label>
+                        <select class="form-select" id="document_type" name="document_type" required>
+                            {% for type_code, type_name in document_types %}
+                                <option value="{{ type_code }}">{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">{% translate "Açıqlama" %}</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="file" class="form-label">{% translate "Fayl" %}</label>
+                        <input type="file" class="form-control" id="file" name="file" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Bağla" %}</button>
+                    <button type="submit" class="btn btn-primary">{% translate "Yüklə" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function confirmDelete(documentId) {
+    if (confirm("{% translate 'Bu sənədi silmək istədiyinizə əminsiniz?' %}")) {
+        // AJAX ilə silmə əməliyyatı
+        fetch(`/sector/documents/${documentId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert(data.message || "{% translate 'Xəta baş verdi.' %}");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("{% translate 'Xəta baş verdi.' %}");
+        });
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

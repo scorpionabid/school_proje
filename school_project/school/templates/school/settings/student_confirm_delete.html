@@ -1,0 +1,84 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">{% trans "Şagirdi Sil" %}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'school:dashboard' %}">{% trans "Ana Səhifə" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:settings' %}">{% trans "Ayarlar" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'school:student_list' %}">{% trans "Şagirdlər" %}</a></li>
+                        <li class="breadcrumb-item active">{% trans "Sil" %}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">{% trans "Şagirdi Silməyi Təsdiqləyin" %}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <h5><i class="icon fas fa-exclamation-triangle"></i> {% trans "Diqqət!" %}</h5>
+                                <p>{% trans "Bu şagirdi silmək istədiyinizdən əminsiniz?" %}</p>
+                                <p>{% trans "Bu əməliyyat geri qaytarıla bilməz və şagirdə aid bütün məlumatlar silinəcək:" %}</p>
+                                <ul>
+                                    <li>{% trans "Davamiyyət məlumatları" %}</li>
+                                    <li>{% trans "Qiymətləndirmə məlumatları" %}</li>
+                                    <li>{% trans "Digər əlaqəli məlumatlar" %}</li>
+                                </ul>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <tr>
+                                        <th style="width: 200px">{% trans "Ad Soyad:" %}</th>
+                                        <td>{{ object.get_full_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>{% trans "UTIS ID:" %}</th>
+                                        <td>{{ object.utis_id }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>{% trans "Sinif:" %}</th>
+                                        <td>{{ object.class_room|default:"-" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>{% trans "Qəbul tarixi:" %}</th>
+                                        <td>{{ object.admission_date }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> {% trans "Sil" %}
+                                </button>
+                                <a href="{% url 'school:student_list' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> {% trans "Ləğv Et" %}
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

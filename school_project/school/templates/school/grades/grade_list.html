@@ -1,0 +1,197 @@
+{% extends 'school/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">{{ grade_type_display }}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'school:dashboard' %}">{% trans "Ana Səhifə" %}</a></li>
+                        <li class="breadcrumb-item active">{{ grade_type_display }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Filter Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Filter" %}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row">
+                        {{ filter_form.as_p }}
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
+                            <a href="?" class="btn btn-secondary">{% trans "Sıfırla" %}</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Grades Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Qiymətlər" %}</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGradeModal">
+                            <i class="fas fa-plus"></i> {% trans "Yeni qiymət" %}
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Tarix" %}</th>
+                                <th>{% trans "Şagird" %}</th>
+                                <th>{% trans "Fənn" %}</th>
+                                <th>{% trans "Qiymət" %}</th>
+                                <th>{% trans "Müəllim" %}</th>
+                                <th>{% trans "Əməliyyatlar" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade in grades %}
+                            <tr>
+                                <td>{{ grade.date }}</td>
+                                <td>{{ grade.student.get_full_name }}</td>
+                                <td>{{ grade.subject }}</td>
+                                <td>{{ grade.grade }}</td>
+                                <td>{{ grade.teacher.get_full_name }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editGradeModal{{ grade.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteGradeModal{{ grade.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if grades.has_other_pages %}
+                <div class="card-footer clearfix">
+                    <ul class="pagination pagination-sm m-0 float-right">
+                        {% if grades.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ grades.previous_page_number }}">&lsaquo;</a></li>
+                        {% endif %}
+                        
+                        {% for i in grades.paginator.page_range %}
+                            {% if grades.number == i %}
+                                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                            {% else %}
+                                <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if grades.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ grades.next_page_number }}">&rsaquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ grades.paginator.num_pages }}">&raquo;</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Add Grade Modal -->
+<div class="modal fade" id="addGradeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Yeni qiymət əlavə et" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ form.as_p }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Bağla" %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans "Əlavə et" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Grade Modals -->
+{% for grade in grades %}
+<div class="modal fade" id="editGradeModal{{ grade.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Qiyməti redaktə et" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'school:grade_edit' grade.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ grade.edit_form.as_p }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Bağla" %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans "Yadda saxla" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Delete Grade Modals -->
+{% for grade in grades %}
+<div class="modal fade" id="deleteGradeModal{{ grade.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Qiyməti sil" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{% trans "Bu qiyməti silmək istədiyinizə əminsiniz?" %}</p>
+                <p><strong>{% trans "Şagird" %}:</strong> {{ grade.student.get_full_name }}</p>
+                <p><strong>{% trans "Fənn" %}:</strong> {{ grade.subject }}</p>
+                <p><strong>{% trans "Qiymət" %}:</strong> {{ grade.grade }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Bağla" %}</button>
+                <form method="post" action="{% url 'school:grade_delete' grade.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">{% trans "Sil" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    // Initialize Select2
+    $('.select2').select2({
+        theme: 'bootstrap4'
+    });
+});
+</script>
+{% endblock %}

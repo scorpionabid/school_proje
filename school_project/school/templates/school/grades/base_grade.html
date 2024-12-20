@@ -1,0 +1,228 @@
+{% extends 'school/base.html' %}
+{% load i18n crispy_forms_tags %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .grade-table th {
+        white-space: nowrap;
+    }
+    .grade-filters {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .grade-form {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .grade-list {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 1rem;
+    }
+    .grade-actions {
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
+{% block inner_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">{% block grade_title %}{% endblock %}</h1>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGradeModal">
+                    <i class="fas fa-plus me-2"></i>{% trans "Yeni qiymət" %}
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="grade-filters">
+                <form method="get" class="row g-3">
+                    {{ filter_form|crispy }}
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>{% trans "Filtrlə" %}
+                        </button>
+                        <a href="." class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>{% trans "Təmizlə" %}
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Grade List -->
+            <div class="grade-list">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover grade-table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Şagird" %}</th>
+                                <th>{% trans "Sinif" %}</th>
+                                <th>{% trans "Fənn" %}</th>
+                                <th>{% trans "Qiymət" %}</th>
+                                <th>{% trans "Tarix" %}</th>
+                                <th>{% trans "Yarımil" %}</th>
+                                <th>{% trans "Tədris ili" %}</th>
+                                <th>{% trans "Əməliyyatlar" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade in grades %}
+                            <tr>
+                                <td>{{ grade.student.get_full_name }}</td>
+                                <td>{{ grade.student.class_room }}</td>
+                                <td>{{ grade.subject }}</td>
+                                <td>{{ grade.grade }}</td>
+                                <td>{{ grade.date|date:"d.m.Y" }}</td>
+                                <td>{{ grade.semester }}</td>
+                                <td>{{ grade.academic_year }}</td>
+                                <td class="grade-actions">
+                                    <button type="button" class="btn btn-sm btn-info me-1" 
+                                            data-bs-toggle="modal" data-bs-target="#editGradeModal{{ grade.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" 
+                                            data-bs-toggle="modal" data-bs-target="#deleteGradeModal{{ grade.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    {% trans "Qiymət tapılmadı" %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if grades.has_other_pages %}
+                <nav aria-label="{% trans 'Səhifələmə' %}">
+                    <ul class="pagination justify-content-center mt-4">
+                        {% if grades.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ grades.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for i in grades.paginator.page_range %}
+                        <li class="page-item {% if grades.number == i %}active{% endif %}">
+                            <a class="page-link" href="?page={{ i }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                                {{ i }}
+                            </a>
+                        </li>
+                        {% endfor %}
+
+                        {% if grades.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ grades.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Grade Modal -->
+<div class="modal fade" id="addGradeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% block modal_title %}{% endblock %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ form|crispy }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {% trans "Bağla" %}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        {% trans "Yadda saxla" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit & Delete Modals -->
+{% for grade in grades %}
+<!-- Edit Modal -->
+<div class="modal fade" id="editGradeModal{{ grade.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Qiyməti redaktə et" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'school:grade_edit' grade.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ grade.get_edit_form|crispy }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {% trans "Bağla" %}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        {% trans "Yadda saxla" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteGradeModal{{ grade.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Qiyməti sil" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{% trans "Bu qiyməti silmək istədiyinizə əminsiniz?" %}</p>
+                <p><strong>{% trans "Şagird" %}:</strong> {{ grade.student.get_full_name }}</p>
+                <p><strong>{% trans "Fənn" %}:</strong> {{ grade.subject }}</p>
+                <p><strong>{% trans "Qiymət" %}:</strong> {{ grade.grade }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% trans "Bağla" %}
+                </button>
+                <form method="post" action="{% url 'school:grade_delete' grade.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        {% trans "Sil" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Şagirdi sil" %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3>{% trans "Şagirdi sil" %}</h3>
+                </div>
+                <div class="card-body">
+                    <p class="alert alert-danger">
+                        {% blocktrans with full_name=object.get_full_name %}
+                        {{ full_name }} adlı şagirdi silmək istədiyinizə əminsiniz?
+                        {% endblocktrans %}
+                    </p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">{% trans "Bəli, sil" %}</button>
+                            <a href="{% url 'school:student_list' %}" class="btn btn-secondary">{% trans "Xeyr, geri qayıt" %}</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends 'school/base.html' %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% if form.instance.pk %}
+{% trans "İşçi Məlumatlarını Yenilə" %}
+{% else %}
+{% trans "Yeni İşçi" %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        {% if form.instance.pk %}
+                        {% trans "İşçi Məlumatlarını Yenilə" %}
+                        {% else %}
+                        {% trans "Yeni İşçi" %}
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- User Information -->
+                            {% if not form.instance.pk %}
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">{% trans "İstifadəçi Məlumatları" %}</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ form.email|as_crispy_field }}
+                                        {{ form.first_name|as_crispy_field }}
+                                        {{ form.last_name|as_crispy_field }}
+                                        {{ form.password|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Staff Information -->
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">{% trans "İşçi Məlumatları" %}</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ form.staff_type|as_crispy_field }}
+                                        {{ form.position|as_crispy_field }}
+                                        {{ form.phone|as_crispy_field }}
+                                        {{ form.emergency_contact|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Information -->
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">{% trans "Əlavə Məlumatlar" %}</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ form.education_level|as_crispy_field }}
+                                        {{ form.specialization|as_crispy_field }}
+                                        {{ form.experience_years|as_crispy_field }}
+                                        {{ form.start_date|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Teaching Information -->
+                            <div class="col-md-6 teaching-fields">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">{% trans "Tədris Məlumatları" %}</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ form.teaching_subjects|as_crispy_field }}
+                                        {{ form.weekly_hours|as_crispy_field }}
+                                        {{ form.address|as_crispy_field }}
+                                        {{ form.is_active|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if form.instance.pk %}
+                                    {% trans "Yenilə" %}
+                                    {% else %}
+                                    {% trans "Əlavə et" %}
+                                    {% endif %}
+                                </button>
+                                <a href="{% url 'school:staff_list' %}" class="btn btn-secondary">
+                                    {% trans "Ləğv et" %}
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Initialize date picker for start_date
+        $('#id_start_date').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+
+        function toggleTeachingFields() {
+            var staffType = $('#id_staff_type').val();
+            var teachingFields = $('.teaching-fields');
+            
+            if (staffType === 'TEACHER') {
+                teachingFields.show();
+            } else {
+                teachingFields.hide();
+            }
+        }
+
+        $('#id_staff_type').change(toggleTeachingFields);
+        toggleTeachingFields(); // Run on page load
+    });
+</script>
+{% endblock %}

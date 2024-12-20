@@ -1,0 +1,250 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ sector.name }} - {% translate "Sektor Detalları" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Əsas məlumat kartı -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>{% translate "Sektor Məlumatları" %}</h6>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'sector:sector_list' %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-arrow-left me-2"></i>{% translate "Geri" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder">{% translate "Əsas Məlumatlar" %}</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span class="text-sm">{% translate "Sektor Adı" %}</span>
+                                    <span class="text-sm font-weight-bold">{{ sector.name }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span class="text-sm">{% translate "Region" %}</span>
+                                    <span class="text-sm font-weight-bold">{{ sector.region.name }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span class="text-sm">{% translate "UTIS Kodu" %}</span>
+                                    <span class="text-sm font-weight-bold">{{ sector.utis_code }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span class="text-sm">{% translate "Status" %}</span>
+                                    <span class="badge badge-sm {% if sector.is_active %}bg-gradient-success{% else %}bg-gradient-secondary{% endif %}">
+                                        {% if sector.is_active %}{% translate "Aktiv" %}{% else %}{% translate "Deaktiv" %}{% endif %}
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder">{% translate "Əlaqə Məlumatları" %}</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span class="text-sm">{% translate "Rəhbər" %}</span>
+                                    <span class="text-sm font-weight-bold">
+                                        {% if sector.director %}
+                                            {{ sector.director.get_full_name }}
+                                        {% else %}
+                                            {% translate "Təyin edilməyib" %}
+                                        {% endif %}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span class="text-sm">{% translate "Telefon" %}</span>
+                                    <span class="text-sm font-weight-bold">{{ sector.phone_number }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span class="text-sm">{% translate "Email" %}</span>
+                                    <span class="text-sm font-weight-bold">{{ sector.email|default:"-" }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span class="text-sm">{% translate "Ünvan" %}</span>
+                                    <span class="text-sm font-weight-bold">{{ sector.address }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistika kartları -->
+    <div class="row">
+        <div class="col-xl-4 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">{% translate "Məktəb Sayı" %}</p>
+                                <h5 class="font-weight-bolder mb-0">
+                                    {{ sector.total_schools }}
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
+                                <i class="fas fa-school text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">{% translate "Şagird Sayı" %}</p>
+                                <h5 class="font-weight-bolder mb-0">
+                                    {{ sector.total_students }}
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md">
+                                <i class="fas fa-user-graduate text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">{% translate "Müəllim Sayı" %}</p>
+                                <h5 class="font-weight-bolder mb-0">
+                                    {{ sector.total_teachers }}
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md">
+                                <i class="fas fa-chalkboard-teacher text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Son fəaliyyətlər -->
+    <div class="row mt-4">
+        <!-- Son sənədlər -->
+        <div class="col-lg-4 mb-lg-0 mb-4">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-0">{% translate "Son Sənədlər" %}</h6>
+                        <a href="{% url 'sector:sector_documents' sector.pk %}" class="btn btn-link text-primary px-3 mb-0">
+                            <i class="fas fa-arrow-right text-primary me-2"></i>{% translate "Hamısına bax" %}
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <div class="timeline timeline-one-side">
+                        {% for doc in recent_documents %}
+                            <div class="timeline-block mb-3">
+                                <span class="timeline-step">
+                                    <i class="fas fa-file text-primary"></i>
+                                </span>
+                                <div class="timeline-content">
+                                    <h6 class="text-dark text-sm font-weight-bold mb-0">{{ doc.title }}</h6>
+                                    <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">
+                                        {{ doc.uploaded_at|date:"d.m.Y H:i" }}
+                                    </p>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-sm text-center py-3 mb-0">{% translate "Heç bir sənəd tapılmadı." %}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Son xəbərlər -->
+        <div class="col-lg-4 mb-lg-0 mb-4">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-0">{% translate "Son Xəbərlər" %}</h6>
+                        <a href="{% url 'sector:sector_news' sector.pk %}" class="btn btn-link text-primary px-3 mb-0">
+                            <i class="fas fa-arrow-right text-primary me-2"></i>{% translate "Hamısına bax" %}
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <div class="timeline timeline-one-side">
+                        {% for news_item in recent_news %}
+                            <div class="timeline-block mb-3">
+                                <span class="timeline-step">
+                                    <i class="fas fa-newspaper text-info"></i>
+                                </span>
+                                <div class="timeline-content">
+                                    <h6 class="text-dark text-sm font-weight-bold mb-0">{{ news_item.title }}</h6>
+                                    <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">
+                                        {{ news_item.published_at|date:"d.m.Y H:i" }}
+                                    </p>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-sm text-center py-3 mb-0">{% translate "Heç bir xəbər tapılmadı." %}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Son hesabatlar -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-0">{% translate "Son Hesabatlar" %}</h6>
+                        <a href="{% url 'sector:sector_reports' sector.pk %}" class="btn btn-link text-primary px-3 mb-0">
+                            <i class="fas fa-arrow-right text-primary me-2"></i>{% translate "Hamısına bax" %}
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <div class="timeline timeline-one-side">
+                        {% for report in recent_reports %}
+                            <div class="timeline-block mb-3">
+                                <span class="timeline-step">
+                                    <i class="fas fa-chart-bar text-warning"></i>
+                                </span>
+                                <div class="timeline-content">
+                                    <h6 class="text-dark text-sm font-weight-bold mb-0">{{ report.title }}</h6>
+                                    <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">
+                                        {{ report.created_at|date:"d.m.Y H:i" }}
+                                    </p>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-sm text-center py-3 mb-0">{% translate "Heç bir hesabat tapılmadı." %}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
