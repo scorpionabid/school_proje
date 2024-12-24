@@ -29,6 +29,38 @@ class Region(models.Model):
     total_students = models.PositiveIntegerField(_('Şagird sayı'), default=0)
     total_teachers = models.PositiveIntegerField(_('Müəllim sayı'), default=0)
     
+    # Akademik göstəricilər
+    average_attendance = models.DecimalField(
+        _('Orta davamiyyət'), 
+        max_digits=5, 
+        decimal_places=2,
+        default=0
+    )
+    average_grade = models.DecimalField(
+        _('Orta qiymət'), 
+        max_digits=5, 
+        decimal_places=2,
+        default=0
+    )
+    
+    # Sektor statistikası
+    total_sectors = models.PositiveIntegerField(_('Sektor sayı'), default=0)
+    active_sectors = models.PositiveIntegerField(_('Aktiv sektor sayı'), default=0)
+    
+    # Əlavə məlumatlar
+    last_report_date = models.DateTimeField(_('Son hesabat tarixi'), null=True, blank=True)
+    report_status = models.CharField(
+        _('Hesabat statusu'),
+        max_length=20,
+        choices=[
+            ('PENDING', _('Gözləyir')),
+            ('SUBMITTED', _('Təqdim edilib')),
+            ('APPROVED', _('Təsdiqlənib')),
+            ('REJECTED', _('Rədd edilib')),
+        ],
+        default='PENDING'
+    )
+    
     # Metadata
     created_at = models.DateTimeField(_('Yaradılma tarixi'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Yenilənmə tarixi'), auto_now=True)
@@ -52,9 +84,55 @@ class Region(models.Model):
         """
         Region statistikasını yeniləyir
         """
-        # Bu metod daha sonra sektor və məktəb app-ləri yaradıldıqdan sonra
-        # real məlumatlarla doldurulacaq
-        pass
+        from school.models import School, Student, Staff, Attendance, Grade
+        from django.db.models import Avg, Count
+        from django.utils import timezone
+        
+        # Məktəb statistikası
+        schools = School.objects.filter(region=self)
+        self.total_schools = schools.count()
+        
+        # Şagird və müəllim sayı
+        self.total_students = Student.objects.filter(school__region=self, is_active=True).count()
+        self.total_teachers = Staff.objects.filter(
+            school__region=self,
+            is_active=True,
+            staff_type='TEACHER'
+        ).count()
+        
+        # Orta davamiyyət (son 30 gün)
+        thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+        attendance_avg = Attendance.objects.filter(
+            student__school__region=self,
+            date__gte=thirty_days_ago
+        ).aggregate(
+            avg_attendance=Avg('is_present')
+        )['avg_attendance'] or 0
+        self.average_attendance = round(attendance_avg * 100, 2)
+        
+        # Orta qiymət
+        grade_avg = Grade.objects.filter(
+            student__school__region=self
+        ).aggregate(
+            avg_grade=Avg('grade')
+        )['avg_grade'] or 0
+        self.average_grade = round(grade_avg, 2)
+        
+        # Sektor statistikası
+        from sector.models import Sector
+        sectors = Sector.objects.filter(region=self)
+        self.total_sectors = sectors.count()
+        self.active_sectors = sectors.filter(is_active=True).count()
+        
+        # Son hesabat tarixi
+        latest_report = self.documents.filter(
+            document_type='REPORT'
+        ).order_by('-uploaded_at').first()
+        
+        if latest_report:
+            self.last_report_date = latest_report.uploaded_at
+        
+        self.save()
 
 class RegionDocument(models.Model):
     """

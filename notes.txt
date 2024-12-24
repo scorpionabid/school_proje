@@ -1,0 +1,188 @@
+Projeni hazırlamaqda əsas məqsəd:
+1. Məktəblərdə davamiyyəti izləmək
+2. Məktəblərdə davamiyyəti əlavə edək
+3. Məktəblərdə davamiyyəti redaktə edək
+4. Məktəblərdə qiymtələnidrmələrin nəticələrini izləmək
+5. Məktəblərdə qiymtələnidrmələrin əlavə edək
+6. Məktəblərdə qiymtələnidrmələrin redaktə edək. 
+7. İstifadəçi dostu interfeys yaratmaq 
+
+projeni xırda applar hazırlamaqla başlamışıq. 
+1. core app - əsas məlumatlar, funksiyalar, models
+2. region app - Region_administriyasi, Region_statistika, Region_dashboard olacaq.
+3. sector app - Sektor_administriyasi, Sektor_statistika, Sektor_dashboard olacaq.
+4. school app - School_administriyasi, School_statistika, School_dashboard olacaq əlavə olaraq siniflər, şagirdlər, müəllimlər olacaq.
+
+İstifadəçi tipləri:
+1. Region Admin
+2. Sektor Admin
+3. Məktəb Admin
+4. Müəllim
+
+Hər istifadəçi tipinin UTİS hesabı (unique) olacaq.
+UTİS hesabdan və paroldan istifadə edərək daxil olacaq.
+UTİS hesab microsoft student hesabıdır. 
+
+
+
+sektorlar regiona tabedir.
+məktəblər sektoruna və regiona tabedir.
+siniflar məktəbə tabedir.
+Sinif rəhbəri olan müəllim aid olduğu sinifdə davamiyyəti və qiymətləndirmə nəticələrini daxil edə, dəyişə və silə bilər.
+
+Region adminin istifadə etdiyi funksiyalar:
+1. Sektor_admin əlavə etmək
+2. Sektor_admin redaktə etmək
+3. Sektor_admin silmək
+4. Sektor sayını əlavə etmək
+5. Sektor siyahısını əlavə etmək.
+
+1. Sektor əlavə etmək
+2. Sektor redaktə etmək
+3. Sektor silmək
+4. Sektor sayını əlavə etmək
+5. Sektor siyahısını əlavə etmək. 
+
+1. Məktəb sayını əlavə etmək
+2. Məktəb siyahısını əlavə etmək. 
+
+1. Məktəb əlavə etmək
+2. Məktəb redaktə etmək
+3. Məktəb silmək
+
+1. Şagird əlavə etmək
+2. Şagird redaktə etmək
+3. Şagird silmək
+
+1. Müəllim əlavə etmək
+2. Müəllim redaktə etmək
+3. Müəllim silmək
+
+Bütün məlumatları csv formatında əlavə etmək
+Bütün məlumatları pdf, excell formatında ixrac etmək
+
+Sector adminin istifadə etdiyi funksiyalar:
+1. Məktəb_admin əlavə etmək
+2. Məktəb_admin redaktə etmək
+3. Məktəb_admin silmək
+
+1. Məktəb əlavə etmək
+2. Məktəb redaktə etmək
+3. Məktəb silmək
+
+1. Şagird əlavə etmək
+2. Şagird redaktə etmək
+3. Şagird silmək    
+
+1. Müəllim əlavə etmək
+2. Müəllim redaktə etmək
+3. Müəllim silmək
+
+Bütün məlumatları csv formatında əlavə etmək
+Bütün məlumatları pdf, excell formatında ixrac etmək.
+
+Məktəb adminin istifadə etdiyi funksiyalar:
+1. Siniflər əlavə etmək
+2. Siniflər redaktə etmək
+3. Siniflər silmək  
+
+1. Şagird əlavə etmək
+2. Şagird redaktə etmək
+3. Şagird silmək
+
+Şagird məlumatları:
+Ad, soyad, ata adı
+Doğum tarixi
+Cinsi
+Məktəb
+Sinif
+UTİS kodu
+hər tədris ilinin sonunda avtometik yenilənir. Şagird yuxarı sinifə update olunur.
+11-ci sinifi bitirən avtomatik silinməlidir.
+
+1. Müəllim əlavə etmək
+2. Müəllim redaktə etmək
+3. Müəllim silmək
+
+1. Personal əlavə etmək
+2. Personal redaktə etmək
+3. Personal silmək
+
+1. Qiymətlənidrmələri əlavə etmək
+2. Qiymətlənidrmələri redaktə etmək    
+3. Qiymətlənidrmələri silmək
+
+1. Qiymətləndirmə əlavə etmək
+2. Qiymətləndirmə redaktə etmək
+3. Qiymətləndirmə silmək
+
+1. Davamiyyət əlavə etmək
+2. Davamiyyət redaktə etmək 
+3. Davamiyyət silmək
+
+Davamiyyət hər gün 2 dəfə aparılacaq: ilk dərs və son dərs.
+
+Davamiyyət 3 formada qeyd olacaq:
+
+1. Dərsdə (default)
+2. İcazəli
+3. İcazəsiz
+
+Qiymətləndirmənin növləri:
+1. Kiçik summativ
+2. Böyük summativ
+3. Monitoring
+4. Yekun
+
+Qiymətləndirmənin əlavə olunacaq funksiyalar:
+1. Qiymətləndirmə əlavə etmək
+2. Qiymətləndirmə redaktə etmək
+3. Qiymətləndirmə silmək    
+
+Qiymətləndirmənin redaktə olunacaq funksiyalar:
+1. Qiymətləndirmə redaktə etmək
+
+
+Hesabat anlıq olaraq dəyişəcək.
+
+Sinif rəhbəri (müəllim) istifadə etdiyi funksiyalar:
+1. Qiymətləndirmə əlavə etmək
+2. Qiymətləndirmə redaktə etmək
+3. Qiymətləndirmə silmək
+
+1. Davamiyyət əlavə etmək
+2. Davamiyyət redaktə etmək 
+3. Davamiyyət silmək
+
+Region_admini üçün hərəkət axımını da yazım.
+region_admini login olunduqdan sonra aşağıdakı işləri görəcək.
+Sektorlar və Sektor_adminləri yaradacaq. məktəbləri, şagirdləri və Müəllimləri import edəcək. 
+sonra ümumi sayları qeyd edəcək. hesabatlara baxacaq. Ehtiyac olarsa hesabatları export edəcək.
+
+Sector_admini login olunduqdan sonra aşağıdakı işləri görəcək.
+məktəbləri, şagirdləri və Müəllimləri yaradacaq. 
+sonra ümumi sayları qeyd edəcək. hesabatlara baxacaq. Ehtiyac olarsa hesabatları export edəcək. 
+
+Məktəb_admini login olunduqdan sonra aşağıdakı işləri görəcək.
+sinifləri, şagirdləri və Müəllimləri yaradacaq. Davamiyyət və Qiymətləndirmələri qeyd edəcək və ya düzgün olmayanları düzəldəcək və ya nəzarət edəcək.
+sonra ümumi sayları qeyd edəcək. hesabatlara baxacaq. Məktəb_admini məktəbə aid informasiyaları redaktə edəcək. Ehtiyac olarsa hesabatları export edəcək.
+
+Kodlar yazılarkən professional formada yazılacaq.
+Kodlar yazılarkən şərhlər daxil ediləcək.
+Kodlar yazılarkən digər fayllar ilə asılılıqları nəzərə alınacaq. 
+
+bütün dəyişikliklər 1 ay müddətinə tarixcədə qeyd olunur. 
+Bütün xətalar ayrıca qeyd olunur. Detallı informasiya qeyd ediləcək.
+
+Səhəfələrdə bir-birində asılı informasiyalar (save olunan kimi) avtomatik update olunacaq.
+Məsələn bu sinfin davamiyyəti yazılan kimi, school_dashboard, sektor_dashboard və region_dashboard dəyişikliklərində avtomatik update olunacaq.
+
+xətaları və bildirişləri JavaScript ilə idarə etmək lazımdır. 
+
+Statistika hesablamalarını adminlər update edəcəklər. Tarix aralıqlarını adminlər dəyişəcəklər. müxtəlif filtrlər ilə filter edəcəklər.
+Tədris ili başlama/bitmə tarixləri hardan idarə region_admin, sektor_admin edəcəklər.
+11-ci sinif məzunlarının məlumatları arxivləşdirilməyəcək.
+1 aydan sonra köhnə loglar arxivləşdirilməyəcək. 
+Manual bildirişlər üçün xüsusi hissə olacaq. Region_admini və Sektor_adminləri və Məktəb_adminlərinə bildiriş göndərə biləcəklər. 
+Əyər sistem yüklənərsə müvəqqəti cachedən istifadə etmək olar. Daha doğrusu ən yaxşı seçim hansıdırsa onu etmək lazımdır. 
+

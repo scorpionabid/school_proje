@@ -2,7 +2,8 @@ from .auth_views import (
     SchoolLoginView, SchoolLogoutView,
     SchoolPasswordChangeView, SchoolPasswordChangeDoneView
 )
-from .dashboard_views import DashboardView
+from .dashboard_views import school_dashboard
+from .settings_views import school_settings, school_profile
 from .school_views import (
     SchoolListView, SchoolCreateView, SchoolDetailView,
     SchoolUpdateView, SchoolDeleteView
@@ -22,20 +23,9 @@ from .student_views import (
 from .staff_views import (
     SchoolStaffListView, StaffCreateView,
     StaffDetailView, StaffUpdateView,
-    StaffDeleteView
-)
-from .attendance_views import (
-    AttendanceCreateView, AttendanceDetailView,
-    AttendanceUpdateView, AttendanceDeleteView,
-    AttendanceBulkCreateView, AttendanceClassDetailView,
-    GeneralAttendanceView
-)
-from .grade_views import (
-    KSQGradeView, BSQGradeView,
-    MonitoringGradeView, FinalGradeView
-)
-from .settings_views import (
-    settings_view, school_profile
+    StaffDeleteView, SettingsStaffListView,
+    SettingsStaffCreateView, SettingsStaffUpdateView,
+    SettingsStaffDeleteView
 )
 
 __all__ = [
@@ -43,7 +33,9 @@ __all__ = [
     'SchoolLogoutView',
     'SchoolPasswordChangeView',
     'SchoolPasswordChangeDoneView',
-    'DashboardView',
+    'school_dashboard',
+    'school_settings',
+    'school_profile',
     'SchoolListView',
     'SchoolCreateView',
     'SchoolDetailView',
@@ -69,17 +61,8 @@ __all__ = [
     'StaffDetailView',
     'StaffUpdateView',
     'StaffDeleteView',
-    'AttendanceCreateView',
-    'AttendanceDetailView',
-    'AttendanceUpdateView',
-    'AttendanceDeleteView',
-    'AttendanceBulkCreateView',
-    'AttendanceClassDetailView',
-    'GeneralAttendanceView',
-    'KSQGradeView',
-    'BSQGradeView',
-    'MonitoringGradeView',
-    'FinalGradeView',
-    'settings_view',
-    'school_profile',
+    'SettingsStaffListView',
+    'SettingsStaffCreateView',
+    'SettingsStaffUpdateView',
+    'SettingsStaffDeleteView'
 ]

@@ -3,6 +3,16 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from .models import Region, RegionDocument, RegionNews
 
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Avg, Count, Q
+from django.utils import timezone
+from datetime import timedelta
+
+from .models import Region
+from sector.models import Sector
+from school.models import School, Student, Staff, Attendance, Grade
+
 @login_required
 def region_list(request):
     """
@@ -96,3 +106,32 @@ def region_statistics(request, pk):
         'total_teachers': region.total_teachers,
     }
     return render(request, 'region/region_statistics.html', context)
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from core.models import CustomUser
+from django.db.models import Count, Avg
+from school.models import Student, Staff, Attendance
+
+@login_required
+def region_dashboard(request):
+    """
+    Region admin dashboard görünüşü
+    """
+    if request.user.user_type != CustomUser.UserType.REGION_ADMIN:
+        raise PermissionDenied
+        
+    region = request.user.region
+    total_students = Student.objects.filter(school__sector__region=region).count()
+    total_teachers = Staff.objects.filter(school__sector__region=region, staff_type='TEACHER').count()
+    avg_attendance = Attendance.objects.filter(student__school__sector__region=region).aggregate(avg=Avg('is_present'))['avg']
+    
+    context = {
+        'user': request.user,
+        'region': region,
+        'total_students': total_students,
+        'total_teachers': total_teachers,
+        'avg_attendance': round(avg_attendance * 100 if avg_attendance else 0, 2)
+    }
+    return render(request, 'region/region_dashboard.html', context)

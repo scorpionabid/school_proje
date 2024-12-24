@@ -1,5 +1,5 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
@@ -24,14 +24,41 @@ class CustomUser(AbstractUser):
     utis_code = models.CharField(_('UTIS kodu'), max_length=7, unique=True, null=True, blank=True)
     whatsapp_number = models.CharField(_('WhatsApp nömrəsi'), max_length=20, blank=True)
     
-    # Məktəb əlaqəsi
+    # Əlaqələr
+    region = models.ForeignKey(
+        'region.Region',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='region_admins',
+        verbose_name=_('Region')
+    )
+    sector = models.ForeignKey(
+        'sector.Sector',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sector_admins',
+        verbose_name=_('Sektor')
+    )
     school = models.ForeignKey(
         'school.School',
-        on_delete=models.CASCADE,
-        related_name='users',
-        verbose_name=_('Məktəb'),
+        on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
+        related_name='school_admins',
+        verbose_name=_('Məktəb')
+    )
+
+    # Metadata
+    created_at = models.DateTimeField(
+        _('Yaradılma tarixi'),
+        default=timezone.now,
+        editable=False
+    )
+    updated_at = models.DateTimeField(
+        _('Yenilənmə tarixi'),
+        auto_now=True
     )
 
     class Meta:
@@ -49,6 +76,29 @@ class CustomUser(AbstractUser):
         if self.father_name:
             full_name = f"{full_name} {self.father_name}"
         return full_name.strip()
+
+    def get_dashboard_url(self):
+        """
+        İstifadəçinin user_type-na görə dashboard url-ni qaytarır
+        """
+        if self.user_type == self.UserType.REGION_ADMIN:
+            return 'region:dashboard'
+        elif self.user_type == self.UserType.SECTOR_ADMIN:
+            return 'sector:dashboard'
+        else:
+            return 'school:dashboard'
+            
+    def save(self, *args, **kwargs):
+        """
+        İstifadəçi məlumatlarını yadda saxlayarkən əlavə yoxlamalar
+        """
+        if self.user_type == self.UserType.REGION_ADMIN:
+            self.sector = None
+            self.school = None
+        elif self.user_type == self.UserType.SECTOR_ADMIN:
+            self.school = None
+            
+        super().save(*args, **kwargs)
 
 class ChangeHistory(models.Model):
     """

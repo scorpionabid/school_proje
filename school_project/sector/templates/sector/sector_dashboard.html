@@ -1,0 +1,234 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ sector.name }} - {% trans "Dashboard" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Sektor Məlumatları -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>{{ sector.name }} {% trans "Sektor İdarəetmə Paneli" %}</h2>
+            <p class="text-muted">{{ sector.region.name }} {% trans "Regionu" %}</p>
+        </div>
+    </div>
+
+    <!-- Əsas Statistika -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Məktəblər" %}</h5>
+                    <h2 class="card-text">{{ sector.total_schools }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Şagirdlər" %}</h5>
+                    <h2 class="card-text">{{ sector.total_students }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Müəllimlər" %}</h5>
+                    <h2 class="card-text">{{ sector.total_teachers }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Orta Qiymət" %}</h5>
+                    <h2 class="card-text">{{ sector.average_grade|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Davamiyyət və Hesabatlar -->
+    <div class="row mb-4">
+        <!-- Davamiyyət Qrafiki -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Davamiyyət Trendi" %}</h5>
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hesabat Statusu -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Hesabat Statusu" %}</h5>
+                    <div class="list-group">
+                        {% for report in pending_reports %}
+                        <a href="#" class="list-group-item list-group-item-warning">
+                            {{ report.title }}
+                            <small class="d-block text-muted">{{ report.created_at|date:"d.m.Y" }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Problemli Məktəblər -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Diqqət Tələb Edən Məktəblər" %}</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Məktəb" %}</th>
+                                    <th>{% trans "Davamiyyət" %}</th>
+                                    <th>{% trans "Orta Qiymət" %}</th>
+                                    <th>{% trans "Şagird Sayı" %}</th>
+                                    <th>{% trans "Müəllim Sayı" %}</th>
+                                    <th>{% trans "Əməliyyatlar" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for school in problem_schools %}
+                                <tr>
+                                    <td>{{ school.name }}</td>
+                                    <td>{{ school.avg_attendance|floatformat:2 }}%</td>
+                                    <td>{{ school.avg_grade|floatformat:2 }}</td>
+                                    <td>{{ school.student_count }}</td>
+                                    <td>{{ school.teacher_count }}</td>
+                                    <td>
+                                        <a href="{% url 'school:detail' school.id %}" class="btn btn-sm btn-primary">
+                                            {% trans "Detallı Bax" %}
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bütün Məktəblər -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Bütün Məktəblər" %}</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Məktəb" %}</th>
+                                    <th>{% trans "Şagird Sayı" %}</th>
+                                    <th>{% trans "Müəllim Sayı" %}</th>
+                                    <th>{% trans "Davamiyyət" %}</th>
+                                    <th>{% trans "Orta Qiymət" %}</th>
+                                    <th>{% trans "Son Hesabat" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for school in schools %}
+                                <tr>
+                                    <td>{{ school.name }}</td>
+                                    <td>{{ school.student_count }}</td>
+                                    <td>{{ school.teacher_count }}</td>
+                                    <td>{{ school.avg_attendance|floatformat:2 }}%</td>
+                                    <td>{{ school.avg_grade|floatformat:2 }}</td>
+                                    <td>{{ school.last_report_date|date:"d.m.Y"|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Son Hesabatlar -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Son Hesabatlar" %}</h5>
+                    <div class="list-group">
+                        {% for report in recent_reports %}
+                        <a href="{{ report.file.url }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ report.title }}</h6>
+                                <small>{{ report.uploaded_at|date:"d.m.Y" }}</small>
+                            </div>
+                            <p class="mb-1">{{ report.description|truncatewords:20 }}</p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Təsdiqlənmiş Hesabatlar" %}</h5>
+                    <div class="list-group">
+                        {% for report in approved_reports %}
+                        <a href="#" class="list-group-item list-group-item-success">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ report.title }}</h6>
+                                <small>{{ report.approval_date|date:"d.m.Y" }}</small>
+                            </div>
+                            <p class="mb-1">{{ report.content|truncatewords:20 }}</p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Davamiyyət qrafiki
+    var ctx = document.getElementById('attendanceChart').getContext('2d');
+    var attendanceData = {
+        labels: [{% for item in attendance_trend %}'{{ item.date|date:"d.m" }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: '{% trans "Davamiyyət" %}',
+            data: [{% for item in attendance_trend %}{{ item.attendance_rate|floatformat:2 }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+        }]
+    };
+    new Chart(ctx, {
+        type: 'line',
+        data: attendanceData,
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

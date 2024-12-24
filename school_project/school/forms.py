@@ -3,20 +3,31 @@ from django.utils.translation import gettext_lazy as _
 from .models import School, Student, ClassRoom, Attendance, Grade, Staff
 from core.models import CustomUser
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import AuthenticationForm
+from .models import SchoolAdmin
 
 class SchoolForm(forms.ModelForm):
     class Meta:
         model = School
         fields = [
-            'name', 'utis_code', 'school_type', 'sector',
-            'address', 'phone', 'email', 'website',
-            'language', 'foundation_year', 'shift_count',
-            'principal', 'is_active'
+            'name',
+            'utis_code',
+            'school_type',
+            'language',
+            'sector',
+            'address',
+            'phone',
         ]
         widgets = {
-            'foundation_year': forms.NumberInput(attrs={'min': 1800, 'max': 2100}),
-            'shift_count': forms.NumberInput(attrs={'min': 1, 'max': 3}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'utis_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'school_type': forms.Select(attrs={'class': 'form-control'}),
+            'language': forms.Select(attrs={'class': 'form-control'}),
+            'sector': forms.Select(attrs={'class': 'form-control'}),
+            'address': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
 
 class StudentForm(forms.ModelForm):
     class Meta:
@@ -238,91 +249,30 @@ class AttendanceFilterForm(forms.Form):
     )
 
 class StaffForm(forms.ModelForm):
-    """
-    İşçi formu
-    """
-    email = forms.EmailField(label=_('E-poçt'))
-    first_name = forms.CharField(label=_('Ad'))
-    last_name = forms.CharField(label=_('Soyad'))
-    password = forms.CharField(
-        label=_('Şifrə'),
-        widget=forms.PasswordInput,
-        required=False
-    )
-
     class Meta:
         model = Staff
-        fields = [
-            'staff_type', 'position', 'phone', 'emergency_contact',
-            'address', 'education_level', 'specialization',
-            'experience_years', 'start_date', 'teaching_subjects',
-            'weekly_hours', 'is_active'
-        ]
+        fields = ['first_name', 'last_name', 'email', 'phone', 'position', 'staff_type']
         widgets = {
-            'start_date': forms.DateInput(attrs={'type': 'date'}),
-            'teaching_subjects': forms.TextInput(attrs={'placeholder': _('Vergüllə ayıraraq daxil edin')}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            'staff_type': forms.Select(attrs={'class': 'form-control'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        self.school = kwargs.pop('school', None)
-        super().__init__(*args, **kwargs)
-        
-        if self.instance.pk:
-            self.fields['email'].initial = self.instance.user.email
-            self.fields['first_name'].initial = self.instance.user.first_name
-            self.fields['last_name'].initial = self.instance.user.last_name
-            self.fields['email'].disabled = True
-            self.fields['password'].help_text = _('Şifrəni dəyişmək üçün doldurun')
-
-    def clean_teaching_subjects(self):
-        teaching_subjects = self.cleaned_data.get('teaching_subjects')
-        if teaching_subjects:
-            return [subject.strip() for subject in teaching_subjects.split(',')]
-        return []
-
-    def clean_weekly_hours(self):
-        weekly_hours = self.cleaned_data.get('weekly_hours')
-        staff_type = self.cleaned_data.get('staff_type')
-        
-        if staff_type == 'TEACHER' and not weekly_hours:
-            raise forms.ValidationError(_('Müəllim üçün həftəlik saat sayı tələb olunur.'))
-        elif staff_type != 'TEACHER' and weekly_hours:
-            return None
-        return weekly_hours
-
-    def save(self, commit=True):
-        staff = super().save(commit=False)
-        
-        if not staff.pk:  # Yeni işçi
-            # İstifadəçi yaratma
-            user = CustomUser.objects.create(
-                username=self.cleaned_data['email'],
-                email=self.cleaned_data['email'],
-                first_name=self.cleaned_data['first_name'],
-                last_name=self.cleaned_data['last_name'],
-                is_staff=True
-            )
-            if self.cleaned_data['password']:
-                user.set_password(self.cleaned_data['password'])
-            user.save()
-            staff.user = user
-        else:  # Mövcud işçi
-            if self.cleaned_data['password']:
-                staff.user.set_password(self.cleaned_data['password'])
-            staff.user.first_name = self.cleaned_data['first_name']
-            staff.user.last_name = self.cleaned_data['last_name']
-            staff.user.save()
-
-        if self.school:
-            staff.school = self.school
-            
-        if commit:
-            staff.save()
-        return staff
-
-from django.contrib.auth.forms import AuthenticationForm
-from .models import SchoolAdmin
-
+class StudentForm(forms.ModelForm):
+    class Meta:
+        model = Student
+        fields = ['first_name', 'last_name', 'birth_date', 'gender', 'address', 'phone']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'birth_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'gender': forms.Select(attrs={'class': 'form-control'}),
+            'address': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 class SchoolLoginForm(AuthenticationForm):
     """
     Məktəb admin login formu
@@ -384,3 +334,52 @@ class SchoolAdminProfileForm(forms.ModelForm):
             school_admin.save()
         
         return school_admin
+
+
+class ClassRoomForm(forms.ModelForm):
+    class Meta:
+        model = ClassRoom
+        fields = ['grade', 'division', 'capacity']
+        widgets = {
+            'grade': forms.Select(attrs={'class': 'form-control'}),
+            'division': forms.TextInput(attrs={'class': 'form-control'}),
+            'capacity': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+        }
+
+class AttendanceBulkForm(forms.Form):
+    date = forms.DateField(
+        label=_('Tarix'),
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    classroom = forms.ModelChoiceField(
+        label=_('Sinif'),
+        queryset=ClassRoom.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    students = forms.ModelMultipleChoiceField(
+        label=_('Şagirdlər'),
+        queryset=Student.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'classroom' in self.data:
+            try:
+                classroom_id = int(self.data.get('classroom'))
+                self.fields['students'].queryset = Student.objects.filter(classroom_id=classroom_id)
+            except (ValueError, TypeError):
+                pass
+
+class GradeForm(forms.ModelForm):
+    class Meta:
+        model = Grade
+        fields = ['student', 'subject', 'grade_type', 'grade', 'date']
+        widgets = {
+            'student': forms.Select(attrs={'class': 'form-control'}),
+            'subject': forms.Select(attrs={'class': 'form-control'}),
+            'grade_type': forms.Select(attrs={'class': 'form-control'}),
+            'grade': forms.NumberInput(attrs={'class': 'form-control'}),
+            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }

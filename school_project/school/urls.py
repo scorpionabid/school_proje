@@ -4,64 +4,59 @@ from . import views
 app_name = 'school'
 
 urlpatterns = [
-    # Authentication URLs
+    # Auth URLs
     path('login/', views.SchoolLoginView.as_view(), name='login'),
     path('logout/', views.SchoolLogoutView.as_view(), name='logout'),
     path('password_change/', views.SchoolPasswordChangeView.as_view(), name='password_change'),
     path('password_change/done/', views.SchoolPasswordChangeDoneView.as_view(), name='password_change_done'),
 
-    # Dashboard URL
-    path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
+    # Dashboard
+    path('dashboard/', views.school_dashboard, name='dashboard'),
 
-    # Settings URLs
-    path('settings/', views.settings_view, name='settings'),
-    path('settings/profile/', views.school_profile, name='school_profile'),
-    path('settings/school/update/', views.SchoolUpdateView.as_view(), name='school_update'),
+    # Settings
+    path('settings/', views.school_settings, name='settings'),
+    path('settings/profile/', views.school_profile, name='settings_profile'),
+    path('settings/staff/', views.SettingsStaffListView.as_view(), name='settings_staff_list'),
+    path('settings/staff/add/', views.SettingsStaffCreateView.as_view(), name='settings_staff_add'),
+    path('settings/staff/<int:pk>/edit/', views.SettingsStaffUpdateView.as_view(), name='settings_staff_edit'),
+    path('settings/staff/<int:pk>/delete/', views.SettingsStaffDeleteView.as_view(), name='settings_staff_delete'),
 
-    # Məktəb URL-ləri
+    # School URLs
     path('', views.SchoolListView.as_view(), name='school_list'),
     path('create/', views.SchoolCreateView.as_view(), name='school_create'),
     path('<int:pk>/', views.SchoolDetailView.as_view(), name='school_detail'),
+    path('<int:pk>/edit/', views.SchoolUpdateView.as_view(), name='school_edit'),
     path('<int:pk>/delete/', views.SchoolDeleteView.as_view(), name='school_delete'),
-    
-    # Sinif URL-ləri
-    path('classroom/', views.ClassRoomListView.as_view(), name='classroom_list'),
-    path('classroom/create/', views.ClassRoomCreateView.as_view(), name='classroom_create'),
-    path('classroom/<int:pk>/', views.ClassRoomDetailView.as_view(), name='classroom_detail'),
-    path('classroom/<int:pk>/update/', views.ClassRoomUpdateView.as_view(), name='classroom_update'),
-    path('classroom/<int:pk>/delete/', views.ClassRoomDeleteView.as_view(), name='classroom_delete'),
-    path('classroom/<int:pk>/students/', views.ClassStudentsView.as_view(), name='classroom_students'),
-    path('classroom/<int:pk>/attendance/', views.ClassAttendanceView.as_view(), name='classroom_attendance'),
-    path('classroom/<int:pk>/grades/', views.ClassGradesView.as_view(), name='classroom_grades'),
-    
-    # Şagird URL-ləri
-    path('student/', views.StudentListView.as_view(), name='student_list'),
-    path('student/create/', views.StudentCreateView.as_view(), name='student_create'),
-    path('student/<int:pk>/', views.StudentDetailView.as_view(), name='student_detail'),
-    path('student/<int:pk>/update/', views.StudentUpdateView.as_view(), name='student_update'),
-    path('student/<int:pk>/delete/', views.StudentDeleteView.as_view(), name='student_delete'),
-    path('student/export/', views.export_students_excel, name='export_students'),
-    path('student/import/', views.import_students_excel, name='import_students'),
-    
-    # İşçi URL-ləri
-    path('staff/', views.SchoolStaffListView.as_view(), name='staff_list'),
-    path('staff/create/', views.StaffCreateView.as_view(), name='staff_create'),
+
+    # Staff URLs
+    path('staff/', views.StaffListView.as_view(), name='staff_list'),
+    path('staff/add/', views.StaffCreateView.as_view(), name='staff_add'),
     path('staff/<int:pk>/', views.StaffDetailView.as_view(), name='staff_detail'),
-    path('staff/<int:pk>/update/', views.StaffUpdateView.as_view(), name='staff_update'),
+    path('staff/<int:pk>/edit/', views.StaffUpdateView.as_view(), name='staff_edit'),
     path('staff/<int:pk>/delete/', views.StaffDeleteView.as_view(), name='staff_delete'),
-    
-    # Davamiyyət URL-ləri
-    path('attendance/', views.GeneralAttendanceView.as_view(), name='attendance_list'),
-    path('attendance/create/', views.AttendanceCreateView.as_view(), name='attendance_create'),
+
+    # Class URLs
+    path('class/', views.ClassRoomListView.as_view(), name='classroom_list'),
+    path('class/add/', views.ClassRoomCreateView.as_view(), name='classroom_add'),
+    path('class/<int:pk>/', views.ClassRoomDetailView.as_view(), name='classroom_detail'),
+    path('class/<int:pk>/edit/', views.ClassRoomUpdateView.as_view(), name='classroom_edit'),
+    path('class/<int:pk>/delete/', views.ClassRoomDeleteView.as_view(), name='classroom_delete'),
+    path('class/<int:pk>/students/', views.ClassStudentsView.as_view(), name='class_students'),
+
+    # Student URLs
+    path('student/', views.StudentListView.as_view(), name='student_list'),
+    path('student/add/', views.StudentCreateView.as_view(), name='student_add'),
+    path('student/<int:pk>/', views.StudentDetailView.as_view(), name='student_detail'),
+    path('student/<int:pk>/edit/', views.StudentUpdateView.as_view(), name='student_edit'),
+    path('student/<int:pk>/delete/', views.StudentDeleteView.as_view(), name='student_delete'),
+
+    # Attendance URLs
+    path('attendance/', views.AttendanceListView.as_view(), name='attendance_list'),
     path('attendance/bulk/', views.AttendanceBulkCreateView.as_view(), name='attendance_bulk_create'),
-    path('attendance/<int:pk>/', views.AttendanceDetailView.as_view(), name='attendance_detail'),
-    path('attendance/<int:pk>/update/', views.AttendanceUpdateView.as_view(), name='attendance_update'),
-    path('attendance/<int:pk>/delete/', views.AttendanceDeleteView.as_view(), name='attendance_delete'),
-    path('attendance/class/<int:pk>/', views.AttendanceClassDetailView.as_view(), name='attendance_class_detail'),
-    
-    # Qiymət URL-ləri
-    path('grades/ksq/', views.KSQGradeView.as_view(), name='grade_ksq'),
-    path('grades/bsq/', views.BSQGradeView.as_view(), name='grade_bsq'),
-    path('grades/monitoring/', views.MonitoringGradeView.as_view(), name='grade_monitoring'),
-    path('grades/final/', views.FinalGradeView.as_view(), name='grade_final'),
+
+    # Grade URLs
+    path('grade/ksq/', views.GradeKSQView.as_view(), name='grade_ksq'),
+    path('grade/bsq/', views.GradeBSQView.as_view(), name='grade_bsq'),
+    path('grade/monitoring/', views.GradeMonitoringView.as_view(), name='grade_monitoring'),
+    path('grade/final/', views.GradeFinalView.as_view(), name='grade_final'),
 ]

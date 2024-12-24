@@ -56,18 +56,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
-    # Third party apps
+    'mathfilters',
     'rest_framework',
     'django_filters',
     'crispy_forms',
     'crispy_bootstrap4',
-    
-    # Local apps
-    'core.apps.CoreConfig',
-    'region.apps.RegionConfig',
-    'sector.apps.SectorConfig',
-    'school.apps.SchoolConfig',
+    'core',
+    'school',
+    'region',
+    'sector',
+    'documents',
 ]
 
 MIDDLEWARE = [
@@ -136,13 +134,14 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# Custom User Model
+# Auth settings
 AUTH_USER_MODEL = 'core.CustomUser'
+LOGIN_URL = 'core:login'
+LOGIN_REDIRECT_URL = 'core:dashboard'
+LOGOUT_REDIRECT_URL = 'core:login'
 
-# Login URLs
-LOGIN_URL = 'school:login'
-LOGIN_REDIRECT_URL = 'school:dashboard'
-LOGOUT_REDIRECT_URL = 'school:login'
+# Messages settings
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Development only

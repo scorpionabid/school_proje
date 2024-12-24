@@ -91,3 +91,74 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         ).select_related('student').order_by('-date')[:10]
         
         return context
+
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Count, Avg, Q
+from core.models import CustomUser
+from ..models import School, ClassRoom, Student, Staff, Grade, Attendance
+
+@login_required
+def school_dashboard(request):
+    """
+    Məktəb admin dashboard görünüşü
+    """
+    if request.user.user_type != CustomUser.UserType.SCHOOL_ADMIN:
+        raise PermissionDenied
+        
+    school = request.user.school
+    today = timezone.now().date()
+    
+    # Əsas statistika
+    total_students = Student.objects.filter(school=school).count()
+    total_teachers = Staff.objects.filter(school=school, staff_type='TEACHER').count()
+    total_classrooms = ClassRoom.objects.filter(school=school).count()
+    
+    # Son 7 günün davamiyyət trendi
+    attendance_trend = []
+    for i in range(6, -1, -1):
+        date = today - timedelta(days=i)
+        daily_attendance = Attendance.objects.filter(
+            student__school=school,
+            date=date
+        ).aggregate(
+            total=Count('id'),
+            present=Count('id', filter=Q(is_present=True))
+        )
+        
+        attendance_rate = 0
+        if daily_attendance['total'] > 0:
+            attendance_rate = (daily_attendance['present'] / daily_attendance['total']) * 100
+            
+        attendance_trend.append({
+            'date': date,
+            'attendance_rate': attendance_rate
+        })
+    
+    # Qiymət statistikası
+    grade_stats = []
+    for grade in range(1, 13):  # 1-dən 12-yə qədər siniflər
+        count = Grade.objects.filter(
+            student__school=school,
+            grade=grade
+        ).count()
+        grade_stats.append({
+            'grade': str(grade),
+            'count': count
+        })
+    
+    context = {
+        'school': school,
+        'total_students': total_students,
+        'total_teachers': total_teachers,
+        'total_classrooms': total_classrooms,
+        'attendance_trend': attendance_trend,
+        'grade_stats': grade_stats,
+        'pending_reports': []  # Gələcəkdə əlavə ediləcək
+    }
+    
+    return render(request, 'school/school_dashboard.html', context)

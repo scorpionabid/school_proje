@@ -1,11 +1,19 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
 from django.contrib import messages
-from django.utils import timezone
-from django.http import JsonResponse
 from django.utils.translation import gettext as _
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from django.db.models import Q, Avg, Count
+from django.http import JsonResponse
+from django.utils import timezone
+from datetime import timedelta
+
 from .models import Sector, SectorDocument, SectorNews, SectorReport
+from .forms import ReportForm
+from documents.models import Document
+from school.models import School, Student, Staff, Attendance, Grade
 
 @login_required
 def sector_list(request):
@@ -409,3 +417,136 @@ def document_details(request, doc_pk):
     }
     
     return JsonResponse(data)
+
+@login_required
+def sector_reports(request, sector_id):
+    sector = get_object_or_404(Sector, id=sector_id)
+    reports = sector.documents.filter(document_type='REPORT').order_by('-created_at')
+    return render(request, 'sector/reports.html', {'sector': sector, 'reports': reports})
+
+@login_required
+def create_report(request):
+    if request.method == 'POST':
+        form = ReportForm(request.POST, request.FILES)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.created_by = request.user
+            report.save()
+            messages.success(request, _('Hesabat uğurla yaradıldı.'))
+            return redirect('sector:reports', sector_id=report.sector.id)
+    else:
+        form = ReportForm()
+    return render(request, 'sector/report_form.html', {'form': form})
+
+@login_required
+def approve_report(request, report_id):
+    report = get_object_or_404(Document, id=report_id, document_type='REPORT')
+    report.status = 'APPROVED'
+    report.save()
+    messages.success(request, _('Hesabat təsdiqləndi.'))
+    return redirect('sector:reports', sector_id=report.sector.id)
+
+@login_required
+def reject_report(request, report_id):
+    report = get_object_or_404(Document, id=report_id, document_type='REPORT')
+    report.status = 'REJECTED'
+    report.save()
+    messages.success(request, _('Hesabat rədd edildi.'))
+    return redirect('sector:reports', sector_id=report.sector.id)
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from core.models import CustomUser
+from django.db.models import Count, Avg
+from school.models import School, Student, Staff, Attendance
+
+@login_required
+def sector_dashboard(request):
+    """
+    Sector admin dashboard görünüşü
+    """
+    if request.user.user_type != CustomUser.UserType.SECTOR_ADMIN:
+        raise PermissionDenied
+        
+    sector = request.user.sector
+    total_students = Student.objects.filter(school__sector=sector).count()
+    total_teachers = Staff.objects.filter(school__sector=sector, staff_type='TEACHER').count()
+    avg_attendance = Attendance.objects.filter(student__school__sector=sector).aggregate(avg=Avg('is_present'))['avg']
+    
+    context = {
+        'user': request.user,
+        'sector': sector,
+        'total_students': total_students,
+        'total_teachers': total_teachers,
+        'avg_attendance': round(avg_attendance * 100 if avg_attendance else 0, 2)
+    }
+    return render(request, 'sector/sector_dashboard.html', context)
+
+class SectorDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'sector/sector_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        sector = self.request.user.directed_sector
+        
+        if not sector:
+            return context
+            
+        # Sektor statistikasını yenilə
+        sector.update_statistics()
+        
+        # Kontekst məlumatlarını hazırla
+        context['sector'] = sector
+        
+        # Son 30 günlük davamiyyət trendi
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        attendance_trend = Attendance.objects.filter(
+            student__school__sector=sector,
+            date__gte=thirty_days_ago
+        ).values('date').annotate(
+            attendance_rate=Avg('is_present')
+        ).order_by('date')
+        
+        context['attendance_trend'] = attendance_trend
+        
+        # Problemli məktəblər (aşağı davamiyyət və ya qiymət)
+        problem_schools = School.objects.filter(
+            sector=sector
+        ).annotate(
+            avg_attendance=Avg('students__attendances__is_present'),
+            avg_grade=Avg('students__grades__grade')
+        ).filter(
+            Q(avg_attendance__lt=0.8) | Q(avg_grade__lt=6)
+        )
+        
+        context['problem_schools'] = problem_schools
+        
+        # Məktəb statistikası
+        schools = School.objects.filter(sector=sector).annotate(
+            student_count=Count('students', distinct=True),
+            teacher_count=Count('staff', filter=Q(staff__staff_type='TEACHER'), distinct=True),
+            avg_attendance=Avg('students__attendances__is_present'),
+            avg_grade=Avg('students__grades__grade')
+        )
+        
+        context['schools'] = schools
+        
+        # Son hesabatlar
+        context['recent_reports'] = sector.documents.filter(
+            document_type='REPORT'
+        ).order_by('-uploaded_at')[:5]
+        
+        # Gözləyən hesabatlar
+        context['pending_reports'] = SectorReport.objects.filter(
+            sector=sector,
+            status='PENDING'
+        ).order_by('-created_at')[:5]
+        
+        # Təsdiqlənmiş hesabatlar
+        context['approved_reports'] = SectorReport.objects.filter(
+            sector=sector,
+            status='APPROVED'
+        ).order_by('-approval_date')[:5]
+        
+        return context

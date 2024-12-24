@@ -1,12 +1,16 @@
-from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.utils.translation import gettext as _
 from django.db.models import Count
 from django.db.models import Q
+from django.core.exceptions import PermissionDenied
 
-from ..models import Staff, CustomUser
+from core.models import CustomUser
+from ..models import Staff
 from ..forms import StaffForm
 
 class SchoolStaffListView(LoginRequiredMixin, ListView):
@@ -118,4 +122,61 @@ class StaffDeleteView(LoginRequiredMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, _('İşçi uğurla silindi.'))
+        return super().delete(request, *args, **kwargs)
+
+class SettingsStaffListView(LoginRequiredMixin, ListView):
+    """İşçilərin siyahısı (Ayarlar səhifəsi üçün)"""
+    model = Staff
+    template_name = 'school/settings/staff_list.html'
+    context_object_name = 'staff_list'
+    paginate_by = 10
+
+    def get_queryset(self):
+        if self.request.user.user_type != CustomUser.UserType.SCHOOL_ADMIN:
+            raise PermissionDenied
+        return Staff.objects.filter(school=self.request.user.school)
+
+class SettingsStaffCreateView(LoginRequiredMixin, CreateView):
+    """Yeni işçi əlavə etmə (Ayarlar səhifəsi üçün)"""
+    model = Staff
+    template_name = 'school/settings/staff_form.html'
+    form_class = StaffForm
+    success_url = reverse_lazy('school:settings_staff_list')
+
+    def form_valid(self, form):
+        if self.request.user.user_type != CustomUser.UserType.SCHOOL_ADMIN:
+            raise PermissionDenied
+        form.instance.school = self.request.user.school
+        messages.success(self.request, _('İşçi uğurla əlavə edildi'))
+        return super().form_valid(form)
+
+class SettingsStaffUpdateView(LoginRequiredMixin, UpdateView):
+    """İşçi məlumatlarının yenilənməsi (Ayarlar səhifəsi üçün)"""
+    model = Staff
+    template_name = 'school/settings/staff_form.html'
+    form_class = StaffForm
+    success_url = reverse_lazy('school:settings_staff_list')
+
+    def get_queryset(self):
+        if self.request.user.user_type != CustomUser.UserType.SCHOOL_ADMIN:
+            raise PermissionDenied
+        return Staff.objects.filter(school=self.request.user.school)
+
+    def form_valid(self, form):
+        messages.success(self.request, _('İşçi məlumatları uğurla yeniləndi'))
+        return super().form_valid(form)
+
+class SettingsStaffDeleteView(LoginRequiredMixin, DeleteView):
+    """İşçinin silinməsi (Ayarlar səhifəsi üçün)"""
+    model = Staff
+    template_name = 'school/settings/staff_confirm_delete.html'
+    success_url = reverse_lazy('school:settings_staff_list')
+
+    def get_queryset(self):
+        if self.request.user.user_type != CustomUser.UserType.SCHOOL_ADMIN:
+            raise PermissionDenied
+        return Staff.objects.filter(school=self.request.user.school)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, _('İşçi uğurla silindi'))
         return super().delete(request, *args, **kwargs)

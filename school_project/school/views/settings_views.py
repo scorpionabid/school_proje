@@ -9,9 +9,10 @@ from django.urls import reverse_lazy
 from django.db.models import Q, Count
 from django import forms
 from django.db import models
+from django.core.exceptions import PermissionDenied
 
-from ..models import School, ClassRoom, Student, SchoolAdmin, Staff
 from core.models import CustomUser
+from ..models import School, ClassRoom, Student, SchoolAdmin, Staff
 from ..forms import ClassRoomForm, StudentForm, SchoolForm, StaffForm
 
 @login_required
@@ -45,22 +46,48 @@ class SchoolUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 @login_required
+def school_settings(request):
+    """
+    Məktəb ayarları səhifəsi
+    """
+    if request.user.user_type != CustomUser.UserType.SCHOOL_ADMIN:
+        raise PermissionDenied
+    
+    school = request.user.school
+    classes = ClassRoom.objects.filter(school=school).order_by('grade', 'division')
+    students = Student.objects.filter(school=school).order_by('last_name', 'first_name')
+    
+    context = {
+        'school': school,
+        'total_students': Student.objects.filter(school=school).count(),
+        'total_teachers': Staff.objects.filter(school=school, staff_type='TEACHER').count(),
+        'total_classes': ClassRoom.objects.filter(school=school).count(),
+        'classes': classes,
+        'students': students,
+    }
+    return render(request, 'school/settings/school_settings.html', context)
+
+@login_required
 def school_profile(request):
     """
     Məktəb profili səhifəsi
     """
-    school = request.user.school_admin.school
+    if request.user.user_type != CustomUser.UserType.SCHOOL_ADMIN:
+        raise PermissionDenied
+    
+    school = request.user.school
     if request.method == 'POST':
         form = SchoolForm(request.POST, instance=school)
         if form.is_valid():
             form.save()
-            messages.success(request, _('Məktəb məlumatları uğurla yeniləndi.'))
+            messages.success(request, _('Məktəb məlumatları uğurla yeniləndi'))
+            return redirect('school:settings')
     else:
         form = SchoolForm(instance=school)
     
     context = {
         'form': form,
-        'school': school
+        'school': school,
     }
     return render(request, 'school/settings/school_profile.html', context)
 

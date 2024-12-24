@@ -1,73 +1,111 @@
+# school/models.py
+# school/models.py
+
+# Django core imports
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
+
+# Third-party imports
+# (hal-hazırda yoxdur)
+
+# Local imports
 from core.models import CustomUser
 from sector.models import Sector
-from django.conf import settings
-import logging
-from django.core.exceptions import ValidationError
 
+# Configure logging
+import logging
 logger = logging.getLogger(__name__)
+
+
+# Bütün sabitləri faylın əvvəlində birləşdirmək:
+# Constants
+SCHOOL_TYPES = [
+    ('PUBLIC', _('Dövlət')),
+    ('PRIVATE', _('Özəl')),
+]
+
+STAFF_TYPES = [
+    ('TEACHER', _('Müəllim')),
+    ('ADMIN', _('İnzibati işçi')),
+    ('SUPPORT', _('Texniki işçi')),
+]
+
+GENDER_CHOICES = [
+    ('M', _('Oğlan')),
+    ('F', _('Qız')),
+]
+
+LANGUAGES = [
+    ('AZ', _('Azərbaycan')),
+    ('RU', _('Rus')),
+    ('EN', _('İngilis')),
+]
+
+EDUCATION_LEVELS = [
+    ('BACHELOR', _('Bakalavr')),
+    ('MASTER', _('Magistr')),
+    ('PHD', _('Doktorantura')),
+    ('OTHER', _('Digər')),
+]
+
+ABSENCE_TYPES = [
+    ('PRESENT', _('Dərsdə')),
+    ('EXCUSE', _('Üzrlü')),
+    ('UNEXCUSE', _('Üzrsüz')),
+]
+
+
+STAFF_TYPE_CHOICES = [
+    ('TEACHER', _('Müəllim')),
+    ('ADMIN', _('İnzibati işçi')),
+    ('SUPPORT', _('Texniki işçi')),
+]
 
 class School(models.Model):
     """
-    Məktəb modeli
+    Məktəb modeli.
+
+    Attributes:
+        name (str): Məktəbin adı
+        utis_code (str): UTIS kodu
+        school_type (str): Məktəbin növü (dövlət/özəl)
+        language (str): Tədris dili
+        sector (Sector): Aid olduğu sektor
+        address (str): Məktəbin ünvanı
+        phone (str): Əlaqə nömrəsi
+        email (str): E-poçt ünvanı
     """
-    SCHOOL_TYPES = [
-        ('PRIMARY', _('İbtidai məktəb')),
-        ('SECONDARY', _('Ümumi orta məktəb')),
-        ('HIGH', _('Tam orta məktəb')),
-        ('LYCEUM', _('Lisey')),
-        ('GYMNASIUM', _('Gimnaziya')),
-    ]
-    
-    LANGUAGES = [
-        ('AZ', _('Azərbaycan')),
-        ('RU', _('Rus')),
-        ('EN', _('İngilis')),
-    ]
-    
-    # Əsas məlumatlar
     name = models.CharField(_('Məktəbin adı'), max_length=200)
     utis_code = models.CharField(_('UTIS kodu'), max_length=20, unique=True)
-    school_type = models.CharField(_('Məktəb növü'), max_length=20, choices=SCHOOL_TYPES)
+    school_type = models.CharField(_('Məktəbin növü'), max_length=10, choices=SCHOOL_TYPES)
+    language = models.CharField(_('Tədris dili'), max_length=2, choices=LANGUAGES)
     sector = models.ForeignKey(
         Sector,
-        on_delete=models.CASCADE,
-        related_name='schools',
+        on_delete=models.PROTECT,
         verbose_name=_('Sektor')
     )
-    
-    # Əlaqə məlumatları
     address = models.TextField(_('Ünvan'))
     phone = models.CharField(_('Telefon'), max_length=20)
-    email = models.EmailField(_('E-poçt'), blank=True)
-    website = models.URLField(_('Veb sayt'), blank=True)
+    email = models.EmailField(_('E-poçt'))
     
-    # Təhsil məlumatları
-    language = models.CharField(_('Tədris dili'), max_length=2, choices=LANGUAGES)
-    foundation_year = models.PositiveIntegerField(_('Təsis ili'))
-    shift_count = models.PositiveIntegerField(
-        _('Növbə sayı'),
-        validators=[MinValueValidator(1), MaxValueValidator(3)]
+    # Statistika sahələri
+    student_count = models.PositiveIntegerField(
+        _('Şagird sayı'),
+        default=0,
+        validators=[MinValueValidator(0)]
+    )
+    staff_count = models.PositiveIntegerField(
+        _('İşçi sayı'),
+        default=0,
+        validators=[MinValueValidator(0)]
     )
     
-    # Rəhbərlik
-    principal = models.ForeignKey(
-        CustomUser,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='managed_school',
-        verbose_name=_('Direktor')
-    )
-    
-    # Statistika
-    total_students = models.PositiveIntegerField(_('Şagird sayı'), default=0)
-    total_teachers = models.PositiveIntegerField(_('Müəllim sayı'), default=0)
-    total_classes = models.PositiveIntegerField(_('Sinif komplekti sayı'), default=0)
-    
-    # Status
-    is_active = models.BooleanField(_('Aktivdir'), default=True)
+    # Tarix sahələri
     created_at = models.DateTimeField(_('Yaradılma tarixi'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Yenilənmə tarixi'), auto_now=True)
 
@@ -75,18 +113,127 @@ class School(models.Model):
         verbose_name = _('Məktəb')
         verbose_name_plural = _('Məktəblər')
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['utis_code']),
+            models.Index(fields=['school_type']),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.get_school_type_display()})"
+
+    def clean(self):
+        """Validate model fields."""
+        if self.student_count < 0:
+            raise ValidationError(_('Şagird sayı mənfi ola bilməz'))
+        if self.staff_count < 0:
+            raise ValidationError(_('İşçi sayı mənfi ola bilməz'))
+
+    def save(self, *args, **kwargs):
+        """Override save method to perform additional operations."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+        logger.info(f"School saved: {self.name} (ID: {self.id})")
+
+    def update_statistics(self):
+        """Update school statistics."""
+        self.student_count = self.students.count()
+        self.staff_count = self.staff_members.count()
+        self.save()
+        logger.info(f"Statistics updated for school: {self.name}")  # düzəldilmiş sətir
+
+class Staff(models.Model):
+    first_name = models.CharField(max_length=100, verbose_name='Ad')
+    last_name = models.CharField(max_length=100, verbose_name='Soyad')
+    email = models.EmailField(verbose_name='E-poçt')
+    phone = models.CharField(max_length=20, verbose_name='Telefon')
+    position = models.CharField(max_length=100, verbose_name='Vəzifə')
+    staff_type = models.CharField(max_length=20, choices=STAFF_TYPE_CHOICES, verbose_name='İşçi növü')
+    school = models.ForeignKey(School, on_delete=models.CASCADE, verbose_name='Məktəb')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'İşçi'
+        verbose_name_plural = 'İşçilər'
+        ordering = ['last_name', 'first_name']
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+
+class ClassRoom(models.Model):
+    """
+    Sinif modeli
+    """
+    GRADE_CHOICES = [(i, str(i)) for i in range(1, 13)]
     
+    school = models.ForeignKey(
+        School,
+        on_delete=models.CASCADE,
+        related_name='classes',
+        verbose_name=_('Məktəb')
+    )
+    grade = models.PositiveIntegerField(
+        _('Sinif'),
+        choices=GRADE_CHOICES,
+        validators=[MinValueValidator(1), MaxValueValidator(12)]
+    )
+    division = models.CharField(_('Bölmə'), max_length=1)
+    language = models.CharField(_('Tədris dili'), max_length=2, choices=LANGUAGES)  # School.LANGUAGES -> LANGUAGES
+    capacity = models.PositiveIntegerField(
+        _('Tutum'),
+        validators=[MinValueValidator(1), MaxValueValidator(40)]
+    )
+    current_students = models.PositiveIntegerField(
+        _('Cari şagird sayı'),
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(40)]
+    )
+    class_teacher = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='managed_class',
+        verbose_name=_('Sinif rəhbəri')
+    )
+    is_active = models.BooleanField(_('Aktivdir'), default=True)
+    created_at = models.DateTimeField(_('Yaradılma tarixi'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('Yenilənmə tarixi'), auto_now=True)
+
+    class Meta:
+        verbose_name = _('Sinif')
+        verbose_name_plural = _('Siniflər')
+        ordering = ['grade', 'division']
+        unique_together = ['school', 'grade', 'division']
+
+    def __str__(self):
+        return f"{self.grade}-{self.division}"
+
+    def get_full_name(self):
+        """
+        Sinifin tam adını qaytarır
+        """
+        return f"{self.grade}-{self.division}"
+
     def update_statistics(self):
         """
-        Məktəb statistikasını yeniləyir
+        Sinif statistikasını yeniləyir
         """
-        self.total_students = self.students.filter(is_active=True).count()
-        self.total_teachers = self.staff_members.filter(staff_type='TEACHER', is_active=True).count()
-        self.total_classes = self.classes.filter(is_active=True).count()
+        self.current_students = self.students.filter(is_active=True).count()
         self.save()
+
+    def save(self, *args, **kwargs):
+        # Validate current_students against capacity
+        if self.current_students > self.capacity:
+            raise ValidationError(_('Cari şagird sayı tutumdan çox ola bilməz'))
+        super().save(*args, **kwargs)
+        # Update school statistics
+        self.school.update_statistics()
+
 
 class Student(models.Model):
     """
@@ -150,75 +297,6 @@ class Student(models.Model):
     def get_short_name(self):
         return f"{self.last_name} {self.first_name}"
 
-class ClassRoom(models.Model):
-    """
-    Sinif modeli
-    """
-    GRADE_CHOICES = [(i, str(i)) for i in range(1, 13)]
-    
-    school = models.ForeignKey(
-        School,
-        on_delete=models.CASCADE,
-        related_name='classes',
-        verbose_name=_('Məktəb')
-    )
-    grade = models.PositiveIntegerField(
-        _('Sinif'),
-        choices=GRADE_CHOICES,
-        validators=[MinValueValidator(1), MaxValueValidator(12)]
-    )
-    division = models.CharField(_('Bölmə'), max_length=1)
-    language = models.CharField(_('Tədris dili'), max_length=2, choices=School.LANGUAGES)
-    capacity = models.PositiveIntegerField(
-        _('Tutum'),
-        validators=[MinValueValidator(1), MaxValueValidator(40)]
-    )
-    current_students = models.PositiveIntegerField(
-        _('Cari şagird sayı'),
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(40)]
-    )
-    class_teacher = models.ForeignKey(
-        CustomUser,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='managed_class',
-        verbose_name=_('Sinif rəhbəri')
-    )
-    is_active = models.BooleanField(_('Aktivdir'), default=True)
-    created_at = models.DateTimeField(_('Yaradılma tarixi'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('Yenilənmə tarixi'), auto_now=True)
-
-    class Meta:
-        verbose_name = _('Sinif')
-        verbose_name_plural = _('Siniflər')
-        ordering = ['grade', 'division']
-        unique_together = ['school', 'grade', 'division']
-
-    def __str__(self):
-        return f"{self.grade}-{self.division}"
-
-    def get_full_name(self):
-        """
-        Sinifin tam adını qaytarır
-        """
-        return f"{self.grade}-{self.division}"
-
-    def update_statistics(self):
-        """
-        Sinif statistikasını yeniləyir
-        """
-        self.current_students = self.students.filter(is_active=True).count()
-        self.save()
-
-    def save(self, *args, **kwargs):
-        # Validate current_students against capacity
-        if self.current_students > self.capacity:
-            raise ValidationError(_('Cari şagird sayı tutumdan çox ola bilməz'))
-        super().save(*args, **kwargs)
-        # Update school statistics
-        self.school.update_statistics()
 
 class Attendance(models.Model):
     """
@@ -270,6 +348,7 @@ class Attendance(models.Model):
     def __str__(self):
         return f"{self.student} - {self.date} - Dərs {self.lesson_number}"
 
+
 class Grade(models.Model):
     """
     Qiymət modeli
@@ -314,6 +393,7 @@ class Grade(models.Model):
     def __str__(self):
         return f"{self.student} - {self.subject} - {self.grade} ({self.get_grade_type_display()})"
 
+
 class SchoolAdmin(models.Model):
     """
     Məktəb administratoru modeli
@@ -352,91 +432,6 @@ class SchoolAdmin(models.Model):
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.school.name}"
 
-class Staff(models.Model):
-    """
-    Məktəb işçisi modeli
-    """
-    STAFF_TYPES = [
-        ('TEACHER', _('Müəllim')),
-        ('ADMIN', _('İnzibati işçi')),
-        ('SUPPORT', _('Texniki işçi')),
-    ]
-
-    EDUCATION_LEVELS = [
-        ('BACHELOR', _('Bakalavr')),
-        ('MASTER', _('Magistr')),
-        ('PHD', _('Doktorantura')),
-        ('OTHER', _('Digər')),
-    ]
-
-    # Şəxsi məlumatlar
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='staff_profile',
-        verbose_name=_('İstifadəçi')
-    )
-    school = models.ForeignKey(
-        School,
-        on_delete=models.CASCADE,
-        related_name='staff_members',
-        verbose_name=_('Məktəb')
-    )
-    staff_type = models.CharField(
-        _('İşçi növü'),
-        max_length=20,
-        choices=STAFF_TYPES
-    )
-    position = models.CharField(_('Vəzifə'), max_length=100)
-    
-    # Əlaqə məlumatları
-    phone = models.CharField(_('Telefon'), max_length=20)
-    emergency_contact = models.CharField(_('Təcili əlaqə nömrəsi'), max_length=20)
-    address = models.TextField(_('Ünvan'))
-    
-    # Təhsil və iş təcrübəsi
-    education_level = models.CharField(
-        _('Təhsil səviyyəsi'),
-        max_length=20,
-        choices=EDUCATION_LEVELS
-    )
-    specialization = models.CharField(_('İxtisas'), max_length=100)
-    experience_years = models.PositiveIntegerField(_('İş təcrübəsi (il)'))
-    start_date = models.DateField(_('İşə başlama tarixi'))
-    
-    # Müəllim məlumatları (yalnız müəllimlər üçün)
-    teaching_subjects = models.CharField(
-        _('Tədris fənləri'),
-        max_length=200,
-        blank=True,
-        help_text=_('Vergüllə ayıraraq daxil edin')
-    )
-    weekly_hours = models.PositiveIntegerField(
-        _('Həftəlik saat'),
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(40)]
-    )
-    
-    # Status
-    is_active = models.BooleanField(_('Aktivdir'), default=True)
-    created_at = models.DateTimeField(_('Yaradılma tarixi'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('Yenilənmə tarixi'), auto_now=True)
-
-    class Meta:
-        verbose_name = _('İşçi')
-        verbose_name_plural = _('İşçilər')
-        ordering = ['user__last_name', 'user__first_name']
-
-    def __str__(self):
-        return f"{self.user.get_full_name()} - {self.get_staff_type_display()}"
-
-    def get_full_name(self):
-        return self.user.get_full_name()
-
-    @property
-    def is_teacher(self):
-        return self.staff_type == 'TEACHER'
 
 class StaffAttendance(models.Model):
     """
@@ -484,8 +479,6 @@ class StaffAttendance(models.Model):
     def __str__(self):
         return f"{self.staff.get_full_name()} - {self.date}"
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 @receiver(post_save, sender=ClassRoom)
 def update_school_statistics(sender, instance, **kwargs):
